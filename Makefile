@@ -13,12 +13,17 @@ X = "\033[0m"
 SRC_DIR = src/
 OBJ_DIR = obj/
 
-CPPFILES = main.cpp #add cpp files here
+CPPFILES = 	main.cpp \
+			Server/Server.cpp \
+			Utils/checkArgs.cpp \
 
 SRCS = ${addprefix $(SRC_DIR), $(CPPFILES)}
 OBJECTS = ${patsubst $(SRC_DIR)%.cpp, $(OBJ_DIR)%.opp, $(SRCS)}
 
-HEADERS = includes/ #add headers here
+HEADERS = 	includes/Server.hpp \
+			includes/Messages.hpp \
+			includes/Utils.hpp \
+
 INCLUDES =	-I ./includes
 
 ifdef DEBUG
@@ -50,7 +55,7 @@ ${NAME}: $(HEADERS) ${OBJECTS}
 	@echo $(G)Finished Compiling of [$(NAME)]$(X)
 
 $(OBJ_DIR)%.opp: $(SRC_DIR)%.cpp
-	@mkdir -p $(OBJ_DIR)
+	@mkdir -p $(shell dirname $@)
 	@echo $(Y)Compiling [$<]...$(X)
 	@$(CC) $(CFLAGS) $(INCLUDES) -c $^ -o $@
 
