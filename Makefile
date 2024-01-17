@@ -13,12 +13,12 @@ X = "\033[0m"
 SRC_DIR = src/
 OBJ_DIR = obj/
 
-CPPFILES = main.cpp #add cpp files here
+CPPFILES = main.cpp server/server.cpp #add cpp files here
 
 SRCS = ${addprefix $(SRC_DIR), $(CPPFILES)}
 OBJECTS = ${patsubst $(SRC_DIR)%.cpp, $(OBJ_DIR)%.opp, $(SRCS)}
 
-HEADERS = includes/ #add headers here
+HEADERS = includes/server.hpp #add headers here
 INCLUDES =	-I ./includes
 
 ifdef DEBUG

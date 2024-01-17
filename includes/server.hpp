@@ -2,20 +2,22 @@
 #include <cstring>
 #include <cstdlib>
 #include <cerrno>
+#include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
 #define MAX_CONNECTS 10
 
-class server
+class Server
 {
 private:
     //external data
     int _port; //listening port
+    std::string _password; //connection password
     int _socket_fd;
 public:
-    server(int port, std::string password);
-    ~server();
+    Server(int port, std::string password);
+    ~Server();
 
     /*getters and setters*/
     //port
@@ -26,8 +28,7 @@ public:
     void setPassword(std::string password);
 
     //other methods
-    int initServer(void); //init the server socket and configure it to start listening
-    int createSocket(void); //create the socket and return th file descriptor
+    void createSocket(void); //create the socket and return th file descriptor
 };
 
 
