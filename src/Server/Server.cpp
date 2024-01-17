@@ -67,7 +67,7 @@ void Server::connectClient(void)
     int fdClient;
     sockaddr_in clientAddress;
     socklen_t addrlen = sizeof(clientAddress);
-    char buffer[1024];
+    char buffer[4096];
 
     fdClient = accept(this->_socket_fd, (sockaddr *)&clientAddress, &addrlen);
 
@@ -77,8 +77,10 @@ void Server::connectClient(void)
         exit(EXIT_FAILURE);
     }
 
-    recv(fdClient, buffer, 1024, 0);
+    recv(fdClient, buffer, 4096, 0);
+    
+    std::cout << buffer << std::endl;
 
-    send(fdClient, "\033[32mWelcome to the IRC server\033[0m\n", 28, 1);
+    send(fdClient, "Welcome to the IRC server\r\n", 28, 0);
     
 }
