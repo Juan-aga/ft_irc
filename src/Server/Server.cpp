@@ -67,7 +67,7 @@ void Server::connectClient(void)
     int fdClient;
     sockaddr_in clientAddress;
     socklen_t addrlen = sizeof(clientAddress);
-    char buffer[4096];
+    char buffer[1024]; //save the message
 
     fdClient = accept(this->_socket_fd, (sockaddr *)&clientAddress, &addrlen);
 
@@ -76,11 +76,19 @@ void Server::connectClient(void)
         perror("accept");
         exit(EXIT_FAILURE);
     }
-
-    recv(fdClient, buffer, 4096, 0);
     
-    std::cout << buffer << std::endl;
+    //read mesages
+    int readed = 0;
+    std::string readBuffer = "";
+    std::string tmpBuffer = "";
 
-    send(fdClient, "Welcome to the IRC server\r\n", 28, 0);
-    
+    memset(buffer, 0, 1024);
+    while ((readed = recv(fdClient, buffer, 1024, 0)) < 0)
+    {
+        tmpBuffer = buffer;
+        readBuffer.append(tmpBuffer);
+        std::cout << tmpBuffer << std::endl;
+        if (readBuffer.find("\r\n"))
+            break;
+    }
 }
