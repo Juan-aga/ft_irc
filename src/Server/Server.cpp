@@ -2,7 +2,7 @@
 
 #include "../includes/Server.hpp"
 
-Server::Server(int port, std::string password): _password(password), _port(port)
+Server::Server(int port, std::string password): _password(password), _port(port), _clientFd(0)
 {
     //debug can eliminate this
     std::cout << "Server constructor called" << std::endl;
@@ -64,14 +64,15 @@ void Server::createSocket()
 
 void Server::connectClient(void)
 {
-    int fdClient;
+    //int _clientFd;
     sockaddr_in clientAddress;
     socklen_t addrlen = sizeof(clientAddress);
     char buffer[1024]; //save the message
 
-    fdClient = accept(this->_socket_fd, (sockaddr *)&clientAddress, &addrlen);
+    if (!_clientFd)
+        _clientFd = accept(this->_socket_fd, (sockaddr *)&clientAddress, &addrlen);
 
-    if (fdClient == -1)
+    if (_clientFd == -1)
     {
         perror("accept");
         exit(EXIT_FAILURE);
@@ -83,12 +84,26 @@ void Server::connectClient(void)
     std::string tmpBuffer = "";
 
     memset(buffer, 0, 1024);
-    while ((readed = recv(fdClient, buffer, 1024, 0)) < 0)
+    while (1)
     {
+        readed = recv(_clientFd, buffer, 1024, 0);
+        if (!readed)
+        {
+            //connection close, delete client.
+            return;
+        }
+        if (readed == -1)
+        {
+            //failed to read from client.
+            return;
+        }
         tmpBuffer = buffer;
         readBuffer.append(tmpBuffer);
-        std::cout << tmpBuffer << std::endl;
         if (readBuffer.find("\r\n"))
+        {
+            std::cout << "Readed: " << tmpBuffer << std::endl;
             break;
+        }
     }
+    std::cerr << "Readed complete.\n";
 }

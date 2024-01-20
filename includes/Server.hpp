@@ -21,6 +21,8 @@ class Server
 		std::string _password;
 		int 		_port;
         int         _socket_fd;
+		int			_clientFd;
+		
 	public:
 		Server(int port, std::string password);
 		~Server();
