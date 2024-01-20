@@ -1,7 +1,8 @@
-#include "../includes/Client.hpp"
+#include "Client.hpp"
 
 Client::Client(void)
 {
+    _authpass = false;
     std::cout << "client called" << std::endl;
 }
 

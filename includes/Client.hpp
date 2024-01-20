@@ -1,11 +1,13 @@
-#include "Server.hpp"
+#pragma once
 
+//#include "Server.hpp"
+#include <iostream>
 class Client
 {
 private:
-    bool _authpass;
     std::string _recvBuff;
 public:
+    bool _authpass;
 
     Client(void);
     ~Client(void);
