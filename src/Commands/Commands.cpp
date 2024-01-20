@@ -31,7 +31,7 @@ void        Commands::execCmd( const std::string & command, const std::string & 
     if (cmd == MAX_CMD)
     {
         //command not founnd.
-        std::cout << "Command " << command << " not found.\nARguments:" << argument << std::endl;
+        std::cout << "Command " << command << " not found.\nArguments: " << argument << std::endl;
     }
     else
         commands[cmd].exec(argument, client, server);
@@ -47,5 +47,5 @@ void        Commands::execPass( const std::string & argument, Client & client, S
         client._authpass = true;
     }
     else
-        std::cout << "Wrong pass.\n";
+        std::cout << "Wrong pass: " << server.getPassword() << std::endl;
 }
