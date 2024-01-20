@@ -1,7 +1,5 @@
 #include "Server.hpp"
 
-#include "../includes/Server.hpp"
-
 Server::Server(int port, std::string password): _password(password), _port(port), _clientFd(0)
 {
     //debug can eliminate this
@@ -123,7 +121,7 @@ void Server::connectClient(void)
         std::cout << "Line: " << line << std::endl;
         space = line.find(" ");
         if (space != std::string::npos)
-            _commands.execCmd(line.substr(0, space), line.substr(space, line.size()), _client);
+            _commands.execCmd(line.substr(0, space), line.substr(space, line.size()), _client, *this);
         startLine = endLine + 1;
         endLine = readBuffer.find('\n', startLine);
     }
