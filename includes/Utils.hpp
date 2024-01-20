@@ -9,6 +9,7 @@
 #include <ctime>
 #include <fstream>
 #include "Messages.hpp"
+#include <cstdlib>
 
 /********************************/
 /*		Utility functions		*/
