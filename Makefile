@@ -13,16 +13,20 @@ X = "\033[0m"
 SRC_DIR = src/
 OBJ_DIR = obj/
 
-CPPFILES = 	main.cpp \
-			Server/Server.cpp \
-			Utils/checkArgs.cpp \
+CPPFILES = 	main.cpp 				\
+			Server/Server.cpp 		\
+			Utils/checkArgs.cpp 	\
+			Commands/Commands.cpp	\
+			Client/Client.cpp
 
 SRCS = ${addprefix $(SRC_DIR), $(CPPFILES)}
 OBJECTS = ${patsubst $(SRC_DIR)%.cpp, $(OBJ_DIR)%.opp, $(SRCS)}
 
-HEADERS = 	includes/Server.hpp \
-			includes/Messages.hpp \
-			includes/Utils.hpp \
+HEADERS = 	includes/Server.hpp 	\
+			includes/Messages.hpp	\
+			includes/Utils.hpp		\
+			includes/Commands.hpp	\
+			includes/Client.hpp
 
 INCLUDES =	-I ./includes
 
