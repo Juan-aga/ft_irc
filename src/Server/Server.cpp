@@ -1,9 +1,94 @@
 #include "Server.hpp"
 
-Server::Server(std::string password, int port) : password(password), port(port) {}
+#include "../includes/Server.hpp"
 
-Server::~Server() {}
+Server::Server(int port, std::string password): _password(password), _port(port)
+{
+    //debug can eliminate this
+    std::cout << "Server constructor called" << std::endl;
 
-int const			&Server::getPort() const { return (this->port); }
+}
 
-std::string const	&Server::getPassword() const { return (this->password); }
+Server::~Server()
+{
+    //debug can eliminate this
+    std::cout << "Server destructor called" << std::endl;
+}
+
+//PORT
+int const &Server::getPort(void) const
+{
+    return (this->_port);
+}
+
+//PASSWORD
+std::string const &Server::getPassword(void) const
+{
+    return (this->_password);
+}
+
+void Server::createSocket()
+{
+    int fdSocket;
+    sockaddr_in socketAddress;
+
+    //CREACION DEL SOCKET
+    fdSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (fdSocket == -1)
+    {
+        std::cerr << "Error creating the socket" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    socketAddress.sin_family = AF_INET;
+    socketAddress.sin_addr.s_addr = INADDR_ANY; //establece como ip por defecto 0.0.0.0
+    socketAddress.sin_port = htons(this->_port);
+
+    std::cout << "hola; " << fdSocket << std::endl;
+    if (bind(fdSocket, (sockaddr *)&socketAddress, sizeof(socketAddress)) == -1)
+    {
+        perror("binding");
+        close(fdSocket);
+        exit(EXIT_FAILURE);
+    }
+    std::cout << "listening" << std::endl;
+    if (listen(fdSocket, MAX_CONNECTS) == -1)
+    {
+        perror("listening");
+        close(fdSocket);
+        exit(EXIT_FAILURE);
+    }
+
+    this->_socket_fd = fdSocket;
+}
+
+void Server::connectClient(void)
+{
+    int fdClient;
+    sockaddr_in clientAddress;
+    socklen_t addrlen = sizeof(clientAddress);
+    char buffer[1024]; //save the message
+
+    fdClient = accept(this->_socket_fd, (sockaddr *)&clientAddress, &addrlen);
+
+    if (fdClient == -1)
+    {
+        perror("accept");
+        exit(EXIT_FAILURE);
+    }
+    
+    //read mesages
+    int readed = 0;
+    std::string readBuffer = "";
+    std::string tmpBuffer = "";
+
+    memset(buffer, 0, 1024);
+    while ((readed = recv(fdClient, buffer, 1024, 0)) < 0)
+    {
+        tmpBuffer = buffer;
+        readBuffer.append(tmpBuffer);
+        std::cout << tmpBuffer << std::endl;
+        if (readBuffer.find("\r\n"))
+            break;
+    }
+}

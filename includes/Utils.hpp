@@ -5,6 +5,7 @@
 /********************************/
 #include <iostream>
 #include <string>
+#include "Client.hpp"
 #include <ctime>
 #include <fstream>
 #include "Messages.hpp"
