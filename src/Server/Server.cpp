@@ -45,6 +45,13 @@ void Server::createSocket()
     socketAddress.sin_port = htons(this->_port);
 
     std::cout << "hola; " << fdSocket << std::endl;
+    int opt = 1;
+    if (setsockopt(fdSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
+    {
+        perror("Failed to reuse local address socket");
+        close(fdSocket);
+        exit(EXIT_FAILURE);
+    }
     if (bind(fdSocket, (sockaddr *)&socketAddress, sizeof(socketAddress)) == -1)
     {
         perror("binding");
@@ -105,5 +112,19 @@ void Server::connectClient(void)
             break;
         }
     }
-    std::cerr << "Readed complete.\n";
+    // process input, must handle in one function
+    std::string::size_type endLine, space, startLine;
+    endLine = readBuffer.find("\n");
+    std::string line = "";
+    startLine = 0;
+    while (endLine != std::string::npos)// || readBuffer[endLine - 1] != '\r')
+    {
+        line = readBuffer.substr(startLine, endLine - startLine);
+        std::cout << "Line: " << line << std::endl;
+        space = line.find(" ");
+        if (space != std::string::npos)
+            _commands.execCmd(line.substr(0, space), line.substr(space, line.size()), _client);
+        startLine = endLine + 1;
+        endLine = readBuffer.find('\n', startLine);
+    }
 }

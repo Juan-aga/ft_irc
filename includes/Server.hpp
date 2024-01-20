@@ -8,6 +8,8 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include "Utils.hpp"
+#include "Commands.hpp"
+#include "Client.hpp"
 
 
 #define MAX_CONNECTS 10
@@ -22,6 +24,8 @@ class Server
 		int 		_port;
         int         _socket_fd;
 		int			_clientFd;
+		Commands	_commands;
+		Client		_client;
 		
 	public:
 		Server(int port, std::string password);
