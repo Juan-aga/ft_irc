@@ -1,6 +1,5 @@
 #pragma once
 
-//#include "Server.hpp"
 #include <iostream>
 class Client
 {
@@ -8,6 +7,7 @@ private:
     std::string _recvBuff;
 public:
     bool _authpass;
+    int     _fd;
 
     Client(void);
     ~Client(void);

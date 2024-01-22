@@ -1,7 +1,12 @@
 #pragma once
 
 #include "Client.hpp"
+
 #include <map>
+#include <iostream>
+
+class Server;
+
 
 class Commands
 {
@@ -11,7 +16,7 @@ class Commands
             PASS,
             MAX_CMD
         };
-        typedef void (*cmdFunction)(const std::string &, Client &);
+        typedef void (*cmdFunction)(const std::string &, Client &, Server &);
         typedef struct s_commands
         {
             cmdFunction exec;
@@ -22,12 +27,12 @@ class Commands
 
         Commands::_CMD  strToCmd( const std::string & cmd );
 
-        static void execPass( const std::string & argument, Client & client );
+        static void execPass( const std::string & argument, Client & client, Server & server );
 
     public:
         Commands( void );
         ~Commands( void );
 
-        void    execCmd( const std::string & command, const std::string & argument, Client & client );
+        void    execCmd( const std::string & command, const std::string & argument, Client & client, Server & server );
 
 };

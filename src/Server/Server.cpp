@@ -1,7 +1,5 @@
 #include "Server.hpp"
 
-#include "../includes/Server.hpp"
-
 Server::Server(int port, std::string password): _password(password), _port(port), _clientFd(0)
 {
     //debug can eliminate this
@@ -97,6 +95,8 @@ void Server::connectClient(void)
         if (!readed)
         {
             //connection close, delete client.
+            std::cout << "Connection closed by client " << _clientFd << std::endl;
+            _clientFd = 0;
             return;
         }
         if (readed == -1)
@@ -112,18 +112,18 @@ void Server::connectClient(void)
             break;
         }
     }
-    // process input, must handle in one function
+    // process input, must handle in other function
     std::string::size_type endLine, space, startLine;
     endLine = readBuffer.find("\n");
     std::string line = "";
     startLine = 0;
     while (endLine != std::string::npos)// || readBuffer[endLine - 1] != '\r')
     {
-        line = readBuffer.substr(startLine, endLine - startLine);
+        line = readBuffer.substr(startLine, endLine - startLine - 1);
         std::cout << "Line: " << line << std::endl;
         space = line.find(" ");
         if (space != std::string::npos)
-            _commands.execCmd(line.substr(0, space), line.substr(space, line.size()), _client);
+            _commands.execCmd(line.substr(0, space), line.substr(space + 1, line.size()), _client, *this);
         startLine = endLine + 1;
         endLine = readBuffer.find('\n', startLine);
     }

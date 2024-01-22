@@ -1,4 +1,5 @@
 #include "Commands.hpp"
+#include "Server.hpp"
 
 Commands::Commands( void )
 {
@@ -22,7 +23,7 @@ Commands::_CMD  Commands::strToCmd( const std::string & cmd )
         return MAX_CMD;
 }
 
-void        Commands::execCmd( const std::string & command, const std::string & argument, Client & client )
+void        Commands::execCmd( const std::string & command, const std::string & argument, Client & client, Server & server )
 {
     _CMD    cmd;
 
@@ -30,15 +31,21 @@ void        Commands::execCmd( const std::string & command, const std::string & 
     if (cmd == MAX_CMD)
     {
         //command not founnd.
-        std::cout << "Command " << command << " not found.\nARguments:" << argument << std::endl;
+        std::cout << "Command " << command << " not found.\nArguments: " << argument << std::endl;
     }
     else
-        commands[cmd].exec(argument, client);
+        commands[cmd].exec(argument, client, server);
 }
 
-void        Commands::execPass( const std::string & argument, Client & client )
+void        Commands::execPass( const std::string & argument, Client & client, Server & server )
 {
     //Check that pass it's ok.
     std::cout << "Checking pass... " << argument << std::endl;
-    client._authpass = true;
+    if (argument == server.getPassword())
+    {
+        std::cout << "Pass ok.\n";
+        client._authpass = true;
+    }
+    else
+        std::cout << "Wrong pass: " << server.getPassword() << std::endl;
 }
