@@ -1,8 +1,7 @@
 #include "Client.hpp"
 
-Client::Client(void)
+Client::Client(void): _recvBuff(""), authpass(false), fd(0), nick(""), user(""), realName("")
 {
-    _authpass = false;
     std::cout << "client called" << std::endl;
 }
 
