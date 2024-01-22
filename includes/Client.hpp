@@ -5,9 +5,13 @@ class Client
 {
 private:
     std::string _recvBuff;
+    
 public:
-    bool _authpass;
-    int     _fd;
+    bool        authpass;
+    int         fd;
+    std::string nick;
+    std::string user;
+    std::string realName;
 
     Client(void);
     ~Client(void);

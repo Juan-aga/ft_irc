@@ -44,7 +44,7 @@ void        Commands::execPass( const std::string & argument, Client & client, S
     if (argument == server.getPassword())
     {
         std::cout << "Pass ok.\n";
-        client._authpass = true;
+        client.authpass = true;
     }
     else
         std::cout << "Wrong pass: " << server.getPassword() << std::endl;
