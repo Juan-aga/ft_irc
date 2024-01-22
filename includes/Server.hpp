@@ -26,7 +26,7 @@ class Server
 		int			_clientFd;
 		Commands	_commands;
 		Client		_client;
-		
+
 	public:
 		Server(int port, std::string password);
 		~Server();

@@ -112,19 +112,9 @@ void Server::connectClient(void)
             break;
         }
     }
-    // process input, must handle in other function
-    std::string::size_type endLine, space, startLine;
-    endLine = readBuffer.find("\n");
-    std::string line = "";
-    startLine = 0;
-    while (endLine != std::string::npos)// || readBuffer[endLine - 1] != '\r')
-    {
-        line = readBuffer.substr(startLine, endLine - startLine - 1);
-        std::cout << "Line: " << line << std::endl;
-        space = line.find(" ");
-        if (space != std::string::npos)
-            _commands.execCmd(line.substr(0, space), line.substr(space + 1, line.size()), _client, *this);
-        startLine = endLine + 1;
-        endLine = readBuffer.find('\n', startLine);
-    }
+    _client.fd = _clientFd;
+    // process input handle in other function
+    // this may change with poll
+    _commands.processInput(readBuffer, _client, *this);
+
 }

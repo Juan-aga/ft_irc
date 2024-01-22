@@ -13,7 +13,10 @@ class Commands
     private:
         enum    _CMD
         {
+            CAP,
             PASS,
+            NICK,
+            USER,
             MAX_CMD
         };
         typedef void (*cmdFunction)(const std::string &, Client &, Server &);
@@ -27,12 +30,18 @@ class Commands
 
         Commands::_CMD  strToCmd( const std::string & cmd );
 
+        bool        checkLogin( Client & client );
+
+        static void execCap( const std::string & argument, Client & client, Server & server );
         static void execPass( const std::string & argument, Client & client, Server & server );
+        static void execNick( const std::string & argument, Client & client, Server & server );
+        static void execUser( const std::string & argument, Client & client, Server & server );
 
     public:
         Commands( void );
         ~Commands( void );
 
+        void    processInput( const std::string & input, Client & client, Server & server );
         void    execCmd( const std::string & command, const std::string & argument, Client & client, Server & server );
 
 };
