@@ -69,52 +69,60 @@ void Server::createSocket()
 
 void Server::connectClient(void)
 {
-    //int _clientFd;
+    std::vector<struct pollfd> pollfds;
     sockaddr_in clientAddress;
     socklen_t addrlen = sizeof(clientAddress);
     char buffer[1024]; //save the message
 
-    if (!_clientFd)
-        _clientFd = accept(this->_socket_fd, (sockaddr *)&clientAddress, &addrlen);
+    pollfds.push_back((struct pollfd){this->_socket_fd, POLLIN, 0});
 
-    if (_clientFd == -1)
+    for (int i = 0; i < int(pollfds.size()); i++)
     {
-        perror("accept");
-        exit(EXIT_FAILURE);
-    }
-    
-    //read mesages
-    int readed = 0;
-    std::string readBuffer = "";
-    std::string tmpBuffer = "";
+        if (pollfds[i].revents & POLLIN)
+        {
+            if (pollfds[i].fd == this->_socket_fd)
+				{
+					int	 clientFd =  accept(this->_socket_fd, (sockaddr *)&clientAddress, &addrlen);
 
-    memset(buffer, 0, 1024);
-    while (1)
-    {
-        readed = recv(_clientFd, buffer, 1024, 0);
-        if (!readed)
-        {
-            //connection close, delete client.
-            std::cout << "Connection closed by client " << _clientFd << std::endl;
-            _clientFd = 0;
-            return;
-        }
-        if (readed == -1)
-        {
-            //failed to read from client.
-            return;
-        }
-        tmpBuffer = buffer;
-        readBuffer.append(tmpBuffer);
-        if (readBuffer.find("\r\n"))
-        {
-            std::cout << "Readed: " << tmpBuffer << std::endl;
-            break;
+					fcntl(clientFd, F_SETFL, O_NONBLOCK);
+					pollfds.push_back( (struct pollfd){clientFd, POLLIN | POLLOUT, 0} );
+				}
+            else
+            {
+                //read mesages
+                int readed = 0;
+                std::string readBuffer = "";
+                std::string tmpBuffer = "";
+                memset(buffer, 0, 1024);
+                while (1)
+                {
+                    readed = recv(pollfds[i].fd, buffer, 1024, 0);
+                    if (!readed)
+                    {
+                        //connection close, delete client.
+                        std::cout << "Connection closed by client " << pollfds[i].fd << std::endl;
+                        pollfds[i].fd = 0;
+                        return;
+                    }
+                    if (readed == -1)
+                    {
+                        //failed to read from client.
+                        return;
+                    }
+                    tmpBuffer = buffer;
+                    readBuffer.append(tmpBuffer);
+                    if (readBuffer.find("\r\n"))
+                    {
+                        std::cout << "Readed: " << tmpBuffer << std::endl;
+                        break;
+                    }
+                }
+                _client.fd = pollfds[i].fd;
+                // process input handle in other function
+                // this may change with poll
+                _commands.processInput(readBuffer, _client, *this);
+                close(pollfds[i].fd);
+            }
         }
     }
-    _client.fd = _clientFd;
-    // process input handle in other function
-    // this may change with poll
-    _commands.processInput(readBuffer, _client, *this);
-
-}
+}            
