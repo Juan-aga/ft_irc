@@ -34,7 +34,7 @@ void Server::createSocket()
 	fdSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (fdSocket == -1)
 	{
-		std::cerr << "Error creating the socket" << std::endl;
+		addFileLog("[-]Error creating the socket", RED_CMD);
 		exit(EXIT_FAILURE);
 	}
 
@@ -42,28 +42,25 @@ void Server::createSocket()
 	socketAddress.sin_addr.s_addr = INADDR_ANY; //establece como ip por defecto 0.0.0.0
 	socketAddress.sin_port = htons(this->_port);
 
-	std::cout << "hola; " << fdSocket << std::endl;
 	int opt = 1;
 	if (setsockopt(fdSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
 	{
-		perror("Failed to reuse local address socket");
+		addFileLog("[-]Error setting socket options", RED_CMD);
 		close(fdSocket);
 		exit(EXIT_FAILURE);
 	}
 	if (bind(fdSocket, (sockaddr *)&socketAddress, sizeof(socketAddress)) == -1)
 	{
-		perror("binding");
+		addFileLog("[-]Error binding the socket", RED_CMD);
 		close(fdSocket);
 		exit(EXIT_FAILURE);
 	}
-	std::cout << "listening" << std::endl;
 	if (listen(fdSocket, MAX_CONNECTS) == -1)
 	{
-		perror("listening");
+		addFileLog("[-]Error listening the socket", RED_CMD);
 		close(fdSocket);
 		exit(EXIT_FAILURE);
 	}
-
 	this->_socket_fd = fdSocket;
 }
 
@@ -138,3 +135,9 @@ void Server::connectClient(void)
 	}
 	
 }            
+
+std::ostream &	operator<<(std::ostream & o, Server const & server)
+{
+	o << "Server Running on -> " << HOST << ":"<< server.getPort() << " with password -> " << server.getPassword() << ".";
+	return (o);
+}

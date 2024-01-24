@@ -1,12 +1,5 @@
 #pragma once
 
-#include <iostream>
-#include <cstring>
-#include <cstdlib>
-#include <cerrno>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
 #include "Utils.hpp"
 #include "Commands.hpp"
 #include "Client.hpp"
@@ -38,3 +31,5 @@ class Server
 		void readMesage(int &clientFd);
 		void newClient(std::vector<struct pollfd> &pollfds);
 };
+
+std::ostream &	operator<<(std::ostream & o, Server const & server);

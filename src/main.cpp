@@ -1,16 +1,14 @@
-#include "../includes/Server.hpp"
+#include "Server.hpp"
 
 int main(int argc, char **argv)
 {
 	checkArgs(argc, argv);
 	Server server(atoi(argv[1]), argv[2]);
-	
-	std::cout << "Server password: " << server.getPassword() << std::endl;
-	std::cout << "Server port: " << server.getPort() << std::endl;
-	std::cout << "Server hostname: " << HOST << std::endl;
-	
+
 	server.createSocket();
-	while(1)
-		server.connectClient();
+	std::stringstream ss;
+	ss << "[+]" << server;
+	addFileLog(ss.str(), GREEN_CMD);
+	server.connectClient();
 	return (0);
 }

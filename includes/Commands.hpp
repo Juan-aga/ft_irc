@@ -1,9 +1,7 @@
 #pragma once
 
 #include "Client.hpp"
-
-#include <map>
-#include <iostream>
+#include "Utils.hpp"
 
 class Server;
 
