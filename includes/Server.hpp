@@ -23,7 +23,7 @@ class Server
 		std::string _password;
 		int 		_port;
         int         _socket_fd;
-		//int			_clientFd;
+		int			_clientFd;
 		Commands	_commands;
 		Client		_client;
 
@@ -36,4 +36,6 @@ class Server
 
         void createSocket(void);
         void connectClient(void);
+		void readMesage(int &clientFd);
+		void newClient(std::vector<struct pollfd> &pollfds);
 };
