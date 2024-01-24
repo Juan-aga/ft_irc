@@ -10,6 +10,10 @@
 #include <fstream>
 #include "Messages.hpp"
 #include <cstdlib>
+#include <vector>
+#include <algorithm>
+#include <poll.h>
+#include <fcntl.h>
 
 /********************************/
 /*		Utility functions		*/

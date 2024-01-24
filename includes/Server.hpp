@@ -11,7 +11,6 @@
 #include "Commands.hpp"
 #include "Client.hpp"
 
-
 #define MAX_CONNECTS 10
 /**
  * @brief main class to manage the server
@@ -36,4 +35,6 @@ class Server
 
         void createSocket(void);
         void connectClient(void);
+		void readMesage(int &clientFd);
+		void newClient(std::vector<struct pollfd> &pollfds);
 };
