@@ -11,7 +11,6 @@
 #include "Commands.hpp"
 #include "Client.hpp"
 
-
 #define MAX_CONNECTS 10
 /**
  * @brief main class to manage the server

@@ -7,6 +7,8 @@ int main(int argc, char **argv)
 	
 	std::cout << "Server password: " << server.getPassword() << std::endl;
 	std::cout << "Server port: " << server.getPort() << std::endl;
+	std::cout << "Server hostname: " << HOST << std::endl;
+	
 	server.createSocket();
 	while(1)
 		server.connectClient();

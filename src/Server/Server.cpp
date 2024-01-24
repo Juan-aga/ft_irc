@@ -130,9 +130,7 @@ void Server::connectClient(void)
 			if (pollfds[i].revents & POLLIN)
 			{
 				if (pollfds[i].fd == this->_socket_fd)
-				{
 					newClient(pollfds);
-				}
 				else
 					readMesage(pollfds[i].fd);
 			}
