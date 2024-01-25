@@ -20,6 +20,9 @@ class Server
 		Client		_client;
 
 	public:
+		std::string	serverName;
+		std::string	serverHost;
+
 		Server(int port, std::string password);
 		~Server();
 

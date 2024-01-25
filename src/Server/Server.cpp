@@ -1,6 +1,6 @@
 #include "Server.hpp"
 
-Server::Server(int port, std::string password): _password(password), _port(port), _clientFd(0)
+Server::Server(int port, std::string password): _password(password), _port(port), _clientFd(0), serverName("server"), serverHost("test.irc")
 {
 	//debug can eliminate this
 	std::cout << "Server constructor called" << std::endl;

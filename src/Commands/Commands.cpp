@@ -7,11 +7,13 @@ Commands::Commands( void )
     commandMap["PASS"] = PASS;
     commandMap["NICK"] = NICK;
     commandMap["USER"] = USER;
+    commandMap["JOIN"] = JOIN;
 
     commands[CAP].exec = &execCap;
     commands[PASS].exec = &execPass;
     commands[NICK].exec = &execNick;
     commands[USER].exec = &execUser;
+    commands[JOIN].exec = &execJoin;
 }
 
 Commands::~Commands( void )
@@ -60,8 +62,21 @@ void    Commands::processInput( const std::string & input, Client & client, Serv
     if (input.find("CAP") != std::string::npos)
     {
         if (checkLogin(client))
+        {
             //send welcome message.
             std::cout << "Client: " << client.nick << " connected.\n";
+            std::string msg = "";
+
+            msg = ":" + server.serverName + "." + server.serverHost + " 001 " + client.nick + " :Welcome to irc server.\r\n";
+            std::cout << "RESPONSE: " << msg;
+            send(client.fd, msg.c_str(), msg.size(), 0);
+            // we have to check in cap if host is *
+            if (client.host == "")
+                client.host = client.user + "@" + server.serverHost;
+            msg = ":" + server.serverName + "." + server.serverHost + " 396 " + client.nick + " " + server.serverHost + " :is now your displayed host\r\n";
+            std::cout << "RESPONSE: " << msg;
+            send(client.fd, msg.c_str(), msg.size(), 0);
+        }
         else
             //send failed to connect, but every single command send his message.
             std::cout << "Client: " << client.fd << " failed to connect.\n";
@@ -131,4 +146,22 @@ void Commands::execUser( const std::string & argument, Client & client, Server &
         //changed user and realname.
         std::cout << "User: " << client.user << " Realname: " << client.realName << std::endl;
     }
+}
+
+void        Commands::execJoin( const std::string & argument, Client & client, Server & server )
+{
+    std::string msg = "";
+
+    //only to test join, we don't check anything, only send like we created the channel
+    msg = ":" + client.nick + "!" + client.host + " JOIN " + argument + " * :" + client.realName + "\r\n";
+    std::cout << "RESPONSE: " << msg;
+    send(client.fd, msg.c_str(), msg.size(), 0);
+    // here send the name of clients in the channel. In this test, create one new and cleint is the operator "@" is the mode. +otroNick is a standar client to test.
+    msg = ":" + server.serverName + "." + server.serverHost + " 353 " + client.nick + " = " + argument + " :@" + client.nick + "!" + client.host + " +otroNick\r\n";
+    std::cout << "RESPONSE: " << msg;
+    send(client.fd, msg.c_str(), msg.size(), 0);
+    // last send the end fo list messagge.
+    msg = ":" + server.serverName + "." + server.serverHost + " 366 " + client.nick + " " + argument + " :End of name list.\r\n";
+    std::cout << "RESPONSE: " << msg;
+    send(client.fd, msg.c_str(), msg.size(), 0);
 }

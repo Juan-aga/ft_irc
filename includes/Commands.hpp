@@ -15,6 +15,7 @@ class Commands
             PASS,
             NICK,
             USER,
+            JOIN,
             MAX_CMD
         };
         typedef void (*cmdFunction)(const std::string &, Client &, Server &);
@@ -34,6 +35,7 @@ class Commands
         static void execPass( const std::string & argument, Client & client, Server & server );
         static void execNick( const std::string & argument, Client & client, Server & server );
         static void execUser( const std::string & argument, Client & client, Server & server );
+        static void execJoin( const std::string & argument, Client & client, Server & server );
 
     public:
         Commands( void );

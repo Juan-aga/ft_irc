@@ -12,6 +12,7 @@ public:
     std::string nick;
     std::string user;
     std::string realName;
+    std::string host;
 
     Client(void);
     ~Client(void);
