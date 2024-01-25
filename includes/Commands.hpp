@@ -18,7 +18,7 @@ class Commands
             JOIN,
             MAX_CMD
         };
-        typedef void (*cmdFunction)(const std::string &, Client &, Server &);
+        typedef bool (*cmdFunction)(const std::string &, Client &, Server &);
         typedef struct s_commands
         {
             cmdFunction exec;
@@ -31,17 +31,17 @@ class Commands
 
         bool        checkLogin( Client & client );
 
-        static void execCap( const std::string & argument, Client & client, Server & server );
-        static void execPass( const std::string & argument, Client & client, Server & server );
-        static void execNick( const std::string & argument, Client & client, Server & server );
-        static void execUser( const std::string & argument, Client & client, Server & server );
-        static void execJoin( const std::string & argument, Client & client, Server & server );
+        static bool execCap( const std::string & argument, Client & client, Server & server );
+        static bool execPass( const std::string & argument, Client & client, Server & server );
+        static bool execNick( const std::string & argument, Client & client, Server & server );
+        static bool execUser( const std::string & argument, Client & client, Server & server );
+        static bool execJoin( const std::string & argument, Client & client, Server & server );
 
     public:
         Commands( void );
         ~Commands( void );
 
-        void    processInput( const std::string & input, Client & client, Server & server );
-        void    execCmd( const std::string & command, const std::string & argument, Client & client, Server & server );
+        bool    processInput( const std::string & input, Client & client, Server & server );
+        bool    execCmd( const std::string & command, const std::string & argument, Client & client, Server & server );
 
 };

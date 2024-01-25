@@ -43,7 +43,7 @@ bool    Commands::checkLogin( Client & client )
     return true;
 }
 
-void    Commands::processInput( const std::string & input, Client & client, Server & server )
+bool    Commands::processInput( const std::string & input, Client & client, Server & server )
 {
     std::string::size_type endLine, space, startLine;
     endLine = input.find("\n");
@@ -55,7 +55,11 @@ void    Commands::processInput( const std::string & input, Client & client, Serv
         //std::cout << "Line: " << line << std::endl;
         space = line.find(" ");
         if (space != std::string::npos)
-            execCmd(line.substr(0, space), line.substr(space + 1, line.size()), client, server);
+        {
+            if (!execCmd(line.substr(0, space), line.substr(space + 1, line.size()), client, server))
+                return false;
+
+        }
         startLine = endLine + 1;
         endLine = input.find('\n', startLine);
     }
@@ -76,14 +80,19 @@ void    Commands::processInput( const std::string & input, Client & client, Serv
             msg = ":" + server.serverName + "." + server.serverHost + " 396 " + client.nick + " " + server.serverHost + " :is now your displayed host\r\n";
             std::cout << "RESPONSE: " << msg;
             send(client.fd, msg.c_str(), msg.size(), 0);
+            return true;
         }
         else
+        {
             //send failed to connect, but every single command send his message.
             std::cout << "Client: " << client.fd << " failed to connect.\n";
+            return false;
+        }
     }
+    return true;
 }
 
-void        Commands::execCmd( const std::string & command, const std::string & argument, Client & client, Server & server )
+bool        Commands::execCmd( const std::string & command, const std::string & argument, Client & client, Server & server )
 {
     _CMD    cmd;
 
@@ -92,22 +101,26 @@ void        Commands::execCmd( const std::string & command, const std::string & 
     {
         //command not founnd.
         std::cout << "Command " << command << " not found.\nArguments: " << argument << std::endl;
+        // discoment when all commands implemented
+        //return false;
     }
     else
-        commands[cmd].exec(argument, client, server);
+        return commands[cmd].exec(argument, client, server);
+    return true;
 }
 
 //All commands of theserver.
 
-void        Commands::execCap( const std::string & argument, Client & client, Server & server )
+bool        Commands::execCap( const std::string & argument, Client & client, Server & server )
 {
     (void)argument;
     (void)client;
     (void)server;
     std::cout << "Processing CAP\n";
+    return true;
 }
 
-void        Commands::execPass( const std::string & argument, Client & client, Server & server )
+bool        Commands::execPass( const std::string & argument, Client & client, Server & server )
 {
     //Check that pass it's ok.
     std::cout << "Checking pass... " << argument << std::endl;
@@ -118,9 +131,10 @@ void        Commands::execPass( const std::string & argument, Client & client, S
     }
     else
         std::cout << "Wrong pass: " << server.getPassword() << std::endl;
+    return client.authpass;
 }
 
-void Commands::execNick( const std::string & argument, Client & client, Server & server )
+bool Commands::execNick( const std::string & argument, Client & client, Server & server )
 {
     (void)server;
     //Check that nick is not used.
@@ -128,17 +142,21 @@ void Commands::execNick( const std::string & argument, Client & client, Server &
     std::cout << "Client: " << client.fd << " changed Nick from: " << client.nick;
     client.nick = argument;
     std::cout << " to: " << client.nick << std::endl;
+    return true;
 }
 
-void Commands::execUser( const std::string & argument, Client & client, Server & server )
+bool Commands::execUser( const std::string & argument, Client & client, Server & server )
 {
     (void)server;
     std::string::size_type space, colon;
     space = argument.find(" ");
     colon = argument.find(":");
     if (space == std::string::npos || colon == std::string::npos)
+    {
         //error on user get user o realname.
         std::cout << "Error parsing user or realname.\n";
+        return false;
+    }
     else
     {
         client.user = argument.substr(0, space);
@@ -146,9 +164,10 @@ void Commands::execUser( const std::string & argument, Client & client, Server &
         //changed user and realname.
         std::cout << "User: " << client.user << " Realname: " << client.realName << std::endl;
     }
+    return true;
 }
 
-void        Commands::execJoin( const std::string & argument, Client & client, Server & server )
+bool        Commands::execJoin( const std::string & argument, Client & client, Server & server )
 {
     std::string msg = "";
 
@@ -164,4 +183,6 @@ void        Commands::execJoin( const std::string & argument, Client & client, S
     msg = ":" + server.serverName + "." + server.serverHost + " 366 " + client.nick + " " + argument + " :End of name list.\r\n";
     std::cout << "RESPONSE: " << msg;
     send(client.fd, msg.c_str(), msg.size(), 0);
+    // if can't join return false
+    return true;
 }
