@@ -1,16 +1,8 @@
 #pragma once
 
-#include <iostream>
-#include <cstring>
-#include <cstdlib>
-#include <cerrno>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
 #include "Utils.hpp"
 #include "Commands.hpp"
 #include "Client.hpp"
-
 
 #define MAX_CONNECTS 10
 /**
@@ -36,4 +28,8 @@ class Server
 
         void createSocket(void);
         void connectClient(void);
+		void readMesage(int &clientFd);
+		void newClient(std::vector<struct pollfd> &pollfds);
 };
+
+std::ostream &	operator<<(std::ostream & o, Server const & server);

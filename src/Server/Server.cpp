@@ -2,119 +2,142 @@
 
 Server::Server(int port, std::string password): _password(password), _port(port), _clientFd(0)
 {
-    //debug can eliminate this
-    std::cout << "Server constructor called" << std::endl;
+	//debug can eliminate this
+	std::cout << "Server constructor called" << std::endl;
 
 }
 
 Server::~Server()
 {
-    //debug can eliminate this
-    std::cout << "Server destructor called" << std::endl;
+	//debug can eliminate this
+	std::cout << "Server destructor called" << std::endl;
 }
 
 //PORT
 int const &Server::getPort(void) const
 {
-    return (this->_port);
+	return (this->_port);
 }
 
 //PASSWORD
 std::string const &Server::getPassword(void) const
 {
-    return (this->_password);
+	return (this->_password);
 }
 
 void Server::createSocket()
 {
-    int fdSocket;
-    sockaddr_in socketAddress;
+	int fdSocket;
+	sockaddr_in socketAddress;
 
-    //CREACION DEL SOCKET
-    fdSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (fdSocket == -1)
-    {
-        std::cerr << "Error creating the socket" << std::endl;
-        exit(EXIT_FAILURE);
-    }
+	//CREACION DEL SOCKET
+	fdSocket = socket(AF_INET, SOCK_STREAM, 0);
+	if (fdSocket == -1)
+	{
+		addFileLog("[-]Error creating the socket", RED_CMD);
+		exit(EXIT_FAILURE);
+	}
 
-    socketAddress.sin_family = AF_INET;
-    socketAddress.sin_addr.s_addr = INADDR_ANY; //establece como ip por defecto 0.0.0.0
-    socketAddress.sin_port = htons(this->_port);
+	socketAddress.sin_family = AF_INET;
+	socketAddress.sin_addr.s_addr = INADDR_ANY; //establece como ip por defecto 0.0.0.0
+	socketAddress.sin_port = htons(this->_port);
 
-    std::cout << "hola; " << fdSocket << std::endl;
-    int opt = 1;
-    if (setsockopt(fdSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
-    {
-        perror("Failed to reuse local address socket");
-        close(fdSocket);
-        exit(EXIT_FAILURE);
-    }
-    if (bind(fdSocket, (sockaddr *)&socketAddress, sizeof(socketAddress)) == -1)
-    {
-        perror("binding");
-        close(fdSocket);
-        exit(EXIT_FAILURE);
-    }
-    std::cout << "listening" << std::endl;
-    if (listen(fdSocket, MAX_CONNECTS) == -1)
-    {
-        perror("listening");
-        close(fdSocket);
-        exit(EXIT_FAILURE);
-    }
+	int opt = 1;
+	if (setsockopt(fdSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
+	{
+		addFileLog("[-]Error setting socket options", RED_CMD);
+		close(fdSocket);
+		exit(EXIT_FAILURE);
+	}
+	if (bind(fdSocket, (sockaddr *)&socketAddress, sizeof(socketAddress)) == -1)
+	{
+		addFileLog("[-]Error binding the socket", RED_CMD);
+		close(fdSocket);
+		exit(EXIT_FAILURE);
+	}
+	if (listen(fdSocket, MAX_CONNECTS) == -1)
+	{
+		addFileLog("[-]Error listening the socket", RED_CMD);
+		close(fdSocket);
+		exit(EXIT_FAILURE);
+	}
+	this->_socket_fd = fdSocket;
+}
 
-    this->_socket_fd = fdSocket;
+void Server::readMesage(int &clientFd)
+{
+	int readed = 0;
+	std::string readBuffer = "";
+	std::string tmpBuffer = "";
+	char buffer[1024]; //save the message
+
+	memset(buffer, 0, 1024);
+	while (1)
+	{
+		readed = recv(clientFd, buffer, 1024, 0);
+		if (!readed)
+		{
+			//connection close, delete client.
+			std::cout << "Connection closed by client " << clientFd << std::endl;
+			close(clientFd);
+			break;
+		}
+		if (readed == -1)
+		{
+			//failed to read from client.
+			return;
+		}
+		tmpBuffer = buffer;
+		readBuffer.append(tmpBuffer);
+		if (readBuffer.find("\r\n"))
+		{
+			std::cout << "Readed: " << tmpBuffer << std::endl;
+			break;
+		}
+	}
+	_client.fd = clientFd;
+	// process input handle in other function
+	// this may change with poll
+	_commands.processInput(readBuffer, _client, *this);
+}
+
+void Server::newClient(std::vector<struct pollfd>& pollfds)
+{
+    sockaddr_in clientAddress;
+    socklen_t addrlen = sizeof(clientAddress);
+
+    this->_clientFd = accept(this->_socket_fd, (sockaddr *)&clientAddress, &addrlen);
+
+    if (this->_clientFd != -1)
+    {
+        fcntl(this->_clientFd, F_SETFL, O_NONBLOCK);
+        pollfds.push_back((struct pollfd){this->_clientFd, POLLIN | POLLOUT, 0});
+    }
 }
 
 void Server::connectClient(void)
 {
-    //int _clientFd;
-    sockaddr_in clientAddress;
-    socklen_t addrlen = sizeof(clientAddress);
-    char buffer[1024]; //save the message
+	std::vector<struct pollfd> pollfds;
+	pollfds.push_back((struct pollfd){this->_socket_fd, POLLIN, 0});
 
-    if (!_clientFd)
-        _clientFd = accept(this->_socket_fd, (sockaddr *)&clientAddress, &addrlen);
+	while (poll(&pollfds[0], pollfds.size(), -1))
+	{
+		for (int i = 0; i < int(pollfds.size()); i++)
+		{
+			if (pollfds[i].revents & POLLIN)
+			{
+				if (pollfds[i].fd == this->_socket_fd)
+					newClient(pollfds);
+				else
+					readMesage(pollfds[i].fd);
+			}
+		}
+	}
+	
+}            
 
-    if (_clientFd == -1)
-    {
-        perror("accept");
-        exit(EXIT_FAILURE);
-    }
-    
-    //read mesages
-    int readed = 0;
-    std::string readBuffer = "";
-    std::string tmpBuffer = "";
-
-    memset(buffer, 0, 1024);
-    while (1)
-    {
-        readed = recv(_clientFd, buffer, 1024, 0);
-        if (!readed)
-        {
-            //connection close, delete client.
-            std::cout << "Connection closed by client " << _clientFd << std::endl;
-            _clientFd = 0;
-            return;
-        }
-        if (readed == -1)
-        {
-            //failed to read from client.
-            return;
-        }
-        tmpBuffer = buffer;
-        readBuffer.append(tmpBuffer);
-        if (readBuffer.find("\r\n"))
-        {
-            std::cout << "Readed: " << tmpBuffer << std::endl;
-            break;
-        }
-    }
-    _client.fd = _clientFd;
-    // process input handle in other function
-    // this may change with poll
-    _commands.processInput(readBuffer, _client, *this);
-
+std::ostream &	operator<<(std::ostream & o, Server const & server)
+{
+	o << "Server Running on -> " << HOST << ":"<< server.getPort() << " with password -> " << server.getPassword() << ".";
+	return (o);
 }

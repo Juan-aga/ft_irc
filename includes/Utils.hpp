@@ -5,12 +5,22 @@
 /********************************/
 #include <iostream>
 #include <string>
-#include "Client.hpp"
+#include <sstream>
 #include <ctime>
 #include <fstream>
-#include "Messages.hpp"
 #include <cstdlib>
-
+#include <vector>
+#include <map>
+#include <algorithm>
+#include <poll.h>
+#include <fcntl.h>
+#include <ostream>
+#include <cstring>
+#include <cerrno>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include "Messages.hpp"
 /********************************/
 /*		Utility functions		*/
 /********************************/
@@ -35,7 +45,8 @@ std::string getTime();
  * @brief Add a message to the ircserv.log file
  * 
  * @param message message to add
+ * @param color color of the message
  * @return true if the message was added
  * @return false if the message wasn't added
  */
-bool addFileLog(std::string message);
+bool addFileLog(std::string message, std::string color);
