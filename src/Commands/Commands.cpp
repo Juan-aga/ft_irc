@@ -34,12 +34,8 @@ Commands::_CMD  Commands::strToCmd( const std::string & cmd )
 bool    Commands::checkLogin( Client & client )
 {
     if (!client.authpass || client.nick == "" || client.user == "" || client.realName == "")
-    {
-        client.nick = "";
-        client.user = "";
-        client.realName = "";
         return false;
-    }
+    client.status = CONNECTED;
     return true;
 }
 
@@ -63,7 +59,7 @@ bool    Commands::processInput( const std::string & input, Client & client, Serv
         startLine = endLine + 1;
         endLine = input.find('\n', startLine);
     }
-    if (input.find("CAP") != std::string::npos)
+    if (client.status == AUTH)
     {
         if (checkLogin(client))
         {
@@ -77,12 +73,14 @@ bool    Commands::processInput( const std::string & input, Client & client, Serv
             // we have to check in cap if host is *
             if (client.host == "")
                 client.host = client.user + "@" + server.serverHost;
+
             msg = ":" + server.serverName + "." + server.serverHost + " 396 " + client.nick + " " + server.serverHost + " :is now your displayed host\r\n";
             std::cout << "RESPONSE: " << msg;
             send(client.fd, msg.c_str(), msg.size(), 0);
-            return true;
+            //add to the client map
+            server.clients[client.nick] = client;
         }
-        else
+        if (input.find("CAP") != std::string::npos && client.status != CONNECTED)
         {
             //send failed to connect, but every single command send his message.
             std::cout << "Client: " << client.fd << " failed to connect.\n";
@@ -127,6 +125,8 @@ bool        Commands::execPass( const std::string & argument, Client & client, S
     if (argument == server.getPassword())
     {
         std::cout << "Pass ok.\n";
+        client.status = AUTH;
+        //this may be delete
         client.authpass = true;
     }
     else
@@ -139,9 +139,24 @@ bool Commands::execNick( const std::string & argument, Client & client, Server &
     (void)server;
     //Check that nick is not used.
     // else return user change name error.
-    std::cout << "Client: " << client.fd << " changed Nick from: " << client.nick;
-    client.nick = argument;
-    std::cout << " to: " << client.nick << std::endl;
+    if (server.clients.find(argument) == server.clients.end())
+    {
+        server.clients.erase(argument);
+        std::cout << "Client: " << client.fd << " changed Nick from: " << client.nick;
+        client.nick = argument;
+        std::cout << " to: " << client.nick << std::endl;
+        server.clients[argument] = client;
+    }
+    else
+    {
+        //return error response nick in use. ERR_NICKNAMEINUSE (433)
+        std::string msg = "";
+        msg = msg = ":" + server.serverName + "." + server.serverHost + " 433 " + client.nick + " " + argument + " :Nickname is already in use\r\n";
+        send(client.fd, msg.c_str(), msg.size(), 0);
+        std::cout << "RESPONSE: " << msg;
+        std::cout << "Nick " << argument << " is in use.\n";
+        return false;
+    }
     return true;
 }
 

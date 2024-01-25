@@ -13,6 +13,7 @@ public:
     std::string user;
     std::string realName;
     std::string host;
+    CLIENT_STATUS   status;
 
     Client(void);
     ~Client(void);

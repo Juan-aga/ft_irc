@@ -22,6 +22,7 @@ class Server
 	public:
 		std::string	serverName;
 		std::string	serverHost;
+		std::map<std::string, Client>	clients;
 
 		Server(int port, std::string password);
 		~Server();
