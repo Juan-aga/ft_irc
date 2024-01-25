@@ -25,6 +25,16 @@
 /*		Utility functions		*/
 /********************************/
 
+/*	Enum for types of state on the client */
+
+enum	CLIENT_STATUS{
+	UNKNOWN,
+	AUTH,
+	CONNECTED,
+	DISCONECT
+};
+
+
 /**
  * @brief check the number of arguments and if 
  * the port is a number and a valid port
