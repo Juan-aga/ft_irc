@@ -18,7 +18,8 @@ Response::Response()
 	this->from = "";
 	this->code = NONE;
 	this->to = "";
-	this->content = "";
+	this->command = "";
+	this->trailer = "";
 	this->sentfd = 1;
 }
 
@@ -41,7 +42,7 @@ Response Response::createReply(const Code &code)
 }
 
 Response& Response::From(const Client &client) { 
-	this->from = client.nick + "!" + client.user + "@" + client.host;
+	this->from = client.nick ;//+ "!" + client.user + "@" + client.host;
 	return *this;
  }
 
@@ -56,8 +57,13 @@ Response& Response::To(const Client &client) {
 	return *this;
 }
 
-Response& Response::Content(const std::string &content){
-	this->content = content;
+Response &	Response::Command( const std::string & command ){
+	this->command = command;
+	return *this;
+}
+
+Response& Response::Trailer(const std::string &trailer){
+	this->trailer = trailer;
 	return *this;
 }
 
@@ -66,7 +72,11 @@ std::string Response::generateMessage(){
 
 	if (!this->from.empty())
 		ss << ":" << this->from << " ";
-	ss << this->content << "\r\n";
+	if (!this->command.empty())
+		ss << this->command << " ";
+	if (!this->trailer.empty())
+		ss << ":" << this->trailer;
+	ss << "\r\n";
 	return ss.str();
 }
 
@@ -75,9 +85,11 @@ std::string Response::generateReply(){
 
 	ss << ":" << this->from << " ";
 	ss << std::setw(3) << std::setfill('0') << this->code << " ";
-	ss << this->to;
-	if (!this->content.empty())
-		ss << " :" << this->content;
+	ss << this->to << " ";
+	if (!this->command.empty())
+		ss << this->command << " ";
+	if (!this->trailer.empty())
+		ss << ":" << this->trailer;
 	ss << "\r\n";
 	return ss.str();
 }
