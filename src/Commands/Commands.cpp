@@ -63,13 +63,13 @@ bool    Commands::processInput( const std::string & input, Client & client, Serv
     {
         if (checkLogin(client))
         {
-            Response response;
+            //Response response;
             //send welcome message.
             std::cout << "Client: " << client.nick << " connected.\n";
             std::string msg = "";
 
             
-            response.createReply(RPL_WELCOME).From(server).To(client).Content("Welcome to irc server.").Send();
+            Response::createReply(RPL_WELCOME).From(server).To(client).Trailer("Welcome to irc server.").Send();
 
 
 
@@ -83,7 +83,7 @@ bool    Commands::processInput( const std::string & input, Client & client, Serv
             {
                 client.host = client.user + "@" + server.serverHost;
                 //not sure to need this..
-                response.createReply(ERR_HOST).From(server).To(client).Content("This is now your displayed host " + server.serverHost).Send();
+                Response::createReply(ERR_HOST).From(server).To(client).Command(server.serverHost).Trailer("This is now your displayed host").Send();
             }
             //msg = ":" + server.serverName + "." + server.serverHost + " 396 " + client.nick + " " + server.serverHost + " :is now your displayed host\r\n";
             //std::cout << "RESPONSE: " << msg;
@@ -161,9 +161,11 @@ bool Commands::execNick( const std::string & argument, Client & client, Server &
     else
     {
         //return error response nick in use. ERR_NICKNAMEINUSE (433)
-        Response    response;
+        //Response    response;
 
-        response.createReply(ERR_NICKNAMEINUSE).From(server).To(client).Content("Nickname " + argument + " is already in use").Send();
+        Response::createReply(ERR_NICKNAMEINUSE).From(server).To(client).Command(argument).Trailer("Nickname is already in use").Send();
+
+        //response.createReply(ERR_NICKNAMEINUSE).From(server).To(client).Command(argument).Trailer("Nickname is already in use").Send();
         // std::string msg = "";
         // msg = msg = ":" + server.serverName + "." + server.serverHost + " 433 " + client.nick + " " + argument + " :Nickname is already in use\r\n";
         // send(client.fd, msg.c_str(), msg.size(), 0);
@@ -198,20 +200,33 @@ bool Commands::execUser( const std::string & argument, Client & client, Server &
 
 bool        Commands::execJoin( const std::string & argument, Client & client, Server & server )
 {
-    std::string msg = "";
+    // std::string msg = "";
 
     //only to test join, we don't check anything, only send like we created the channel
-    msg = ":" + client.nick + "!" + client.host + " JOIN " + argument + " * :" + client.realName + "\r\n";
-    std::cout << "RESPONSE: " << msg;
-    send(client.fd, msg.c_str(), msg.size(), 0);
+    Response::createMessage().From(client).To(client).Command("JOIN " + argument + " *").Send();
+    //msg = ":" + client.nick + "!" + client.host + " JOIN " + argument + " * :" + client.realName + "\r\n";
+    // msg = ":" + client.nick + " JOIN " + argument + " *\r\n";// :" + client.nick + "\r\n";
+    // std::cout << "RESPONSE: " << msg;
+    // send(client.fd, msg.c_str(), msg.size(), 0);
+
     // here send the name of clients in the channel. In this test, create one new and cleint is the operator "@" is the mode. +otroNick is a standar client to test.
-    msg = ":" + server.serverName + "." + server.serverHost + " 353 " + client.nick + " = " + argument + " :@" + client.nick + "!" + client.host + " +otroNick\r\n";
-    std::cout << "RESPONSE: " << msg;
-    send(client.fd, msg.c_str(), msg.size(), 0);
+    Response::createReply(RPL_NAMREPLY).From(server).To(client).Command("= " + argument).Trailer("@" + client.nick + " +otroNick").Send();
+    // msg = ":" + server.serverName + "." + server.serverHost + " 353 " + client.nick + " = " + argument + " :@" + client.nick + " +otroNick\r\n";
+    // //msg = ":" + server.serverName + "." + server.serverHost + " 353 " + client.nick + " = " + argument + " :@" + client.nick + "!" + client.host + " +otroNick\r\n";
+    // std::cout << "RESPONSE: " << msg;
+    // send(client.fd, msg.c_str(), msg.size(), 0);
+
     // last send the end fo list messagge.
-    msg = ":" + server.serverName + "." + server.serverHost + " 366 " + client.nick + " " + argument + " :End of name list.\r\n";
-    std::cout << "RESPONSE: " << msg;
-    send(client.fd, msg.c_str(), msg.size(), 0);
+    Response::createReply(RPL_ENDOFNAMES).From(server).To(client).Command(argument).Trailer("End of name list.").Send();
+    // msg = ":" + server.serverName + "." + server.serverHost + " 366 " + client.nick + " " + argument + " :End of name list.\r\n";
+    // std::cout << "RESPONSE: " << msg;
+    // send(client.fd, msg.c_str(), msg.size(), 0);
+
+    // test only send join to the other clients
+    Response::createMessage().Trailer("meloinvenTo JOIN " + argument).Send();
+    // msg = ":meloinvenTo JOIN " + argument + " *\r\n";
+    // std::cout << "RESPONSE: " << msg;
+    // send(client.fd, msg.c_str(), msg.size(), 0);
     // if can't join return false
     return true;
 }
