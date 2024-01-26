@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "Response.hpp"
+#include "Server.hpp"
 
 Response::Response()
 {
@@ -30,10 +31,10 @@ Response Response::createMessage()
 	return response;
 }
 
-Response Response::createReply(const Code &code, const std::string from)
+Response Response::createReply(const Code &code)
 {
 	Response response;
-	response.from = from;
+	//response.from = from;
 	response.code = code;
 	response.type = REPLY;
 	return response;
