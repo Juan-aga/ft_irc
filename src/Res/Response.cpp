@@ -33,7 +33,7 @@ Response Response::createMessage()
 Response Response::createReply(const Code &code, const std::string from)
 {
 	Response response;
-	Response.from = from;
+	response.from = from;
 	response.code = code;
 	response.type = REPLY;
 	return response;
