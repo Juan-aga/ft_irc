@@ -1,25 +1,14 @@
 #include "Server.hpp"
 
-Server::Server(int port, std::string password): _password(password), _port(port), _clientFd(0), serverName("server"), serverHost("test.irc")
-{
-	//debug can eliminate this
-	std::cout << "Server constructor called" << std::endl;
+Server::Server(int port, std::string password): _password(password), _port(port), _clientFd(0), serverName("server"), serverHost("test.irc") {}
 
-}
+Server::~Server() {}
 
-Server::~Server()
-{
-	//debug can eliminate this
-	std::cout << "Server destructor called" << std::endl;
-}
-
-//PORT
 int const &Server::getPort(void) const
 {
 	return (this->_port);
 }
 
-//PASSWORD
 std::string const &Server::getPassword(void) const
 {
 	return (this->_password);
@@ -28,36 +17,39 @@ std::string const &Server::getPassword(void) const
 void Server::createSocket()
 {
 	int fdSocket;
+	int opt = 1;
 	sockaddr_in socketAddress;
 
-	//CREACION DEL SOCKET
+	//create socket
 	fdSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (fdSocket == -1)
 	{
-		addFileLog("[-]Error creating the socket", RED_CMD);
+		addFileLog(" [-]Error creating the socket", RED_CMD);
 		exit(EXIT_FAILURE);
 	}
 
 	socketAddress.sin_family = AF_INET;
-	socketAddress.sin_addr.s_addr = INADDR_ANY; //establece como ip por defecto 0.0.0.0
+	socketAddress.sin_addr.s_addr = INADDR_ANY;
 	socketAddress.sin_port = htons(this->_port);
 
-	int opt = 1;
+	//set socket options
 	if (setsockopt(fdSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
 	{
-		addFileLog("[-]Error setting socket options", RED_CMD);
+		addFileLog(" [-]Error setting socket options", RED_CMD);
 		close(fdSocket);
 		exit(EXIT_FAILURE);
 	}
+	//bind ip and port to socket
 	if (bind(fdSocket, (sockaddr *)&socketAddress, sizeof(socketAddress)) == -1)
 	{
-		addFileLog("[-]Error binding the socket", RED_CMD);
+		addFileLog(" [-]Error binding the socket", RED_CMD);
 		close(fdSocket);
 		exit(EXIT_FAILURE);
 	}
+	//listen for connections
 	if (listen(fdSocket, MAX_CONNECTS) == -1)
 	{
-		addFileLog("[-]Error listening the socket", RED_CMD);
+		addFileLog(" [-]Error listening the socket", RED_CMD);
 		close(fdSocket);
 		exit(EXIT_FAILURE);
 	}

@@ -67,9 +67,10 @@ bool    Commands::processInput( const std::string & input, Client & client, Serv
             std::cout << "Client: " << client.nick << " connected.\n";
             std::string msg = "";
 
-            msg = ":" + server.serverName + "." + server.serverHost + " 001 " + client.nick + " :Welcome to irc server.\r\n";
-            std::cout << "RESPONSE: " << msg;
-            send(client.fd, msg.c_str(), msg.size(), 0);
+            //Response::createReply(RPL_WELCOME).To(client).Content("Welcome to irc server. " + client.nick).Send();
+            // msg = ":" + server.serverName + "." + server.serverHost + " 001 " + client.nick + " :Welcome to irc server.\r\n";
+            // std::cout << "RESPONSE: " << msg;
+            // send(client.fd, msg.c_str(), msg.size(), 0);
             // we have to check in cap if host is *
             if (client.host == "")
                 client.host = client.user + "@" + server.serverHost;
