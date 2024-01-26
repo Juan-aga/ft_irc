@@ -71,11 +71,11 @@ std::string Response::generateMessage(){
 	std::stringstream ss;
 
 	if (!this->from.empty())
-		ss << ":" << this->from << " ";
+		ss << ":" << this->from;
 	if (!this->command.empty())
-		ss << this->command << " ";
+		ss << " " << this->command ;
 	if (!this->trailer.empty())
-		ss << ":" << this->trailer;
+		ss << " " << ":" << this->trailer;
 	ss << "\r\n";
 	return ss.str();
 }
@@ -106,5 +106,5 @@ void Response::Send(){
 	}
 	send(this->sentfd, message.c_str(), message.length(), 0);
 	if (DEBUG)
-		std::cout << "From response: " << message << std::endl;
+		std::cout << "From response: " << message;
 }
