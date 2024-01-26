@@ -34,7 +34,6 @@ enum	CLIENT_STATUS{
 	DISCONECT
 };
 
-
 /**
  * @brief check the number of arguments and if 
  * the port is a number and a valid port
