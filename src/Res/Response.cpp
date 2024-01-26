@@ -6,7 +6,7 @@
 /*   By: paescano <paescano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/25 17:21:30 by paescano          #+#    #+#             */
-/*   Updated: 2024/01/26 13:02:27 by paescano         ###   ########.fr       */
+/*   Updated: 2024/01/26 14:52:48 by paescano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 Response::Response()
 {
-	this->from = server.serverName + "." + server.serverHost;
+	this->from = "";
 	this->code = NONE;
 	this->to = "";
 	this->content = "";
@@ -30,54 +30,54 @@ Response Response::createMessage()
 	return response;
 }
 
-Response Response::createReply(const Code &code)
+Response Response::createReply(const Code &code, const std::string from)
 {
 	Response response;
+	Response.from = from;
 	response.code = code;
 	response.type = REPLY;
 	return response;
 }
 
-Response& Response::from(const Client &client) { 
+Response& Response::From(const Client &client) { 
 	this->from = client.nick + "!" + client.user + "@" + client.host;
 	return *this;
  }
 
-Response& Response::to(const Client &client) {
-	this->fd = client.fd;
+Response& Response::To(const Client &client) {
+	this->sentfd = client.fd;
 	this->to = client.nick;
 	return *this;
 }
 
-Response& Response::content(const string &content){
+Response& Response::Content(const std::string &content){
 	this->content = content;
 	return *this;
 }
 
-string Response::generateMessage(){
-	std::stringstream stream;
+std::string Response::generateMessage(){
+	std::stringstream ss;
 
 	if (!this->from.empty())
-		stream << ":" << this->from << " ";
-	stream << this->content << "\r\n";
-	return stream.str();
+		ss << ":" << this->from << " ";
+	ss << this->content << "\r\n";
+	return ss.str();
 }
 
-string Response::generateReply(){
-	std::stringstream stream;
+std::string Response::generateReply(){
+	std::stringstream ss;
 
-	stream << ":" << this->from << " ";
-	stream << std::setw(3) << std::setfill('0') << this->code << " ";
-	stream << this->to;
+	ss << ":" << this->from << " ";
+	ss << std::setw(3) << std::setfill('0') << this->code << " ";
+	ss << this->to;
 	if (!this->content.empty())
-		stream << " :" << this->content;
-	stream << "\r\n";
-	return stream.str();
+		ss << " :" << this->content;
+	ss << "\r\n";
+	return ss.str();
 }
 
-void Response::send(){
-	std::stringstream stream;
-	string message;
+void Response::Send(){
+	std::string message;
 	switch(this->type){
 		case MESSAGE:
 			message = generateMessage();
@@ -86,5 +86,5 @@ void Response::send(){
 			message = generateReply();
 			break;
 	}
-	::send(this->sentfd, message.c_str(), message.length(), 0);
+	send(this->sentfd, message.c_str(), message.length(), 0);
 }

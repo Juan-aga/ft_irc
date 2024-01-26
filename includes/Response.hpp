@@ -28,16 +28,16 @@ class Response
 		std::string content;
 		int			sentfd;
 
-		string generateMessage();
-		string generateReply();
+		std::string generateMessage();
+		std::string generateReply();
 	public:
 		Response();
 		~Response();
 
 		static Response createMessage();
-		static Response createReply(const Code &code);		
-		Response& from(const Client &client);		
-		Response& to(const Client & client);		
-		Response& content(const string &content);
-		void send();
+		static Response createReply(const Code &code, std::string from);		
+		Response& From(const Client &client);		
+		Response& To(const Client & client);		
+		Response& Content(const std::string &content);
+		void Send();
 };
