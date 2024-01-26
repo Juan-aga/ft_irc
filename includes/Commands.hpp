@@ -2,11 +2,11 @@
 
 #include "Client.hpp"
 #include "Utils.hpp"
-//#include "Response.hpp"
+#include "Response.hpp"
 
 class Server;
 
-class Response;
+//class Response;
 
 class Commands
 {

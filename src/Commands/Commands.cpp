@@ -63,21 +63,31 @@ bool    Commands::processInput( const std::string & input, Client & client, Serv
     {
         if (checkLogin(client))
         {
+            Response response;
             //send welcome message.
             std::cout << "Client: " << client.nick << " connected.\n";
             std::string msg = "";
+
+            
+            response.createReply(RPL_WELCOME).From(server).To(client).Content("Welcome to irc server.").Send();
+
+
 
             //Response::createReply(RPL_WELCOME).To(client).Content("Welcome to irc server. " + client.nick).Send();
             // msg = ":" + server.serverName + "." + server.serverHost + " 001 " + client.nick + " :Welcome to irc server.\r\n";
             // std::cout << "RESPONSE: " << msg;
             // send(client.fd, msg.c_str(), msg.size(), 0);
             // we have to check in cap if host is *
-            if (client.host == "")
-                client.host = client.user + "@" + server.serverHost;
 
-            msg = ":" + server.serverName + "." + server.serverHost + " 396 " + client.nick + " " + server.serverHost + " :is now your displayed host\r\n";
-            std::cout << "RESPONSE: " << msg;
-            send(client.fd, msg.c_str(), msg.size(), 0);
+            if (client.host == "")
+            {
+                client.host = client.user + "@" + server.serverHost;
+                //not sure to need this..
+                response.createReply(ERR_HOST).From(server).To(client).Content("This is now your displayed host " + server.serverHost).Send();
+            }
+            //msg = ":" + server.serverName + "." + server.serverHost + " 396 " + client.nick + " " + server.serverHost + " :is now your displayed host\r\n";
+            //std::cout << "RESPONSE: " << msg;
+            //send(client.fd, msg.c_str(), msg.size(), 0);
             //add to the client map
             server.clients[client.nick] = client;
         }
@@ -151,11 +161,14 @@ bool Commands::execNick( const std::string & argument, Client & client, Server &
     else
     {
         //return error response nick in use. ERR_NICKNAMEINUSE (433)
-        std::string msg = "";
-        msg = msg = ":" + server.serverName + "." + server.serverHost + " 433 " + client.nick + " " + argument + " :Nickname is already in use\r\n";
-        send(client.fd, msg.c_str(), msg.size(), 0);
-        std::cout << "RESPONSE: " << msg;
-        std::cout << "Nick " << argument << " is in use.\n";
+        Response    response;
+
+        response.createReply(ERR_NICKNAMEINUSE).From(server).To(client).Content("Nickname " + argument + " is already in use").Send();
+        // std::string msg = "";
+        // msg = msg = ":" + server.serverName + "." + server.serverHost + " 433 " + client.nick + " " + argument + " :Nickname is already in use\r\n";
+        // send(client.fd, msg.c_str(), msg.size(), 0);
+        // std::cout << "RESPONSE: " << msg;
+        // std::cout << "Nick " << argument << " is in use.\n";
         return false;
     }
     return true;
