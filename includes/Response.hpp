@@ -17,6 +17,8 @@ enum	Code
 	RPL_WELCOME = 1,
 	RPL_NAMEREPLY = 353,
 	RPL_ENDOFNAMES = 366,
+	ERR_HOST = 396,
+	ERR_NICKNAMEINUSE = 433
 };
 
 class Response
