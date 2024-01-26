@@ -2,7 +2,9 @@
 
 #include "Client.hpp"
 #include "Utils.hpp"
-#include "Server.hpp"
+//#include "Server.hpp"
+
+class Server;
 
 enum	Type
 {
