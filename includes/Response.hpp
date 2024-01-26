@@ -2,9 +2,9 @@
 
 #include "Client.hpp"
 #include "Utils.hpp"
-//#include "Server.hpp"
+#include "Server.hpp"
 
-class Server;
+//class Server;
 
 enum	Type
 {
@@ -38,7 +38,8 @@ class Response
 
 		static Response createMessage();
 		static Response createReply(const Code &code, std::string from);		
-		Response& From(const Client &client);		
+		Response& From(const Client &client);
+		Response& From(const Server & server);	
 		Response& To(const Client & client);		
 		Response& Content(const std::string &content);
 		void Send();

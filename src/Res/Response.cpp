@@ -44,6 +44,11 @@ Response& Response::From(const Client &client) {
 	return *this;
  }
 
+ Response& Response::From(const Server & server) { 
+	this->from = server.serverName + "." + server.serverHost ;
+	return *this;
+ }
+
 Response& Response::To(const Client &client) {
 	this->sentfd = client.fd;
 	this->to = client.nick;
@@ -87,4 +92,6 @@ void Response::Send(){
 			break;
 	}
 	send(this->sentfd, message.c_str(), message.length(), 0);
+	if (DEBUG)
+		std::cout << "From response: " << message << std::endl;
 }
