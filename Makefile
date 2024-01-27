@@ -22,6 +22,7 @@ CPPFILES = 	main.cpp 				\
 			Utils/getTime.cpp		\
 			Commands/Commands.cpp	\
 			Client/Client.cpp		\
+			Res/Response.cpp		\
 
 SRCS = ${addprefix $(SRC_DIR), $(CPPFILES)}
 OBJECTS = ${patsubst $(SRC_DIR)%.cpp, $(OBJ_DIR)%.opp, $(SRCS)}
@@ -30,7 +31,8 @@ HEADERS = 	includes/Server.hpp 	\
 			includes/Messages.hpp	\
 			includes/Utils.hpp		\
 			includes/Commands.hpp	\
-			includes/Client.hpp
+			includes/Client.hpp		\
+			includes/Response.hpp	\
 
 INCLUDES =	-I ./includes
 

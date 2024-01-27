@@ -1,14 +1,8 @@
 #include "Client.hpp"
 
-Client::Client(void): _recvBuff(""), authpass(false), fd(0), nick(""), user(""), realName("")
-{
-    std::cout << "client called" << std::endl;
-}
+Client::Client(void): _recvBuff(""), fd(0), nick(""), user(""), realName(""), host(""), status(UNKNOWN) {}
 
-Client::~Client(void)
-{
-    std::cout << "client destructor called" << std::endl;
-}
+Client::~Client(void) {}
 
 void Client::setRecvBuff(std::string &buffer)
 {

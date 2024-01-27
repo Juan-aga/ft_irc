@@ -17,9 +17,13 @@ class Server
         int         _socket_fd;
 		int			_clientFd;
 		Commands	_commands;
-		Client		_client;
+		//Client		_client;// delete
 
 	public:
+		std::string	serverName;
+		std::string	serverHost; 
+		std::map<int, Client * >	clients;
+
 		Server(int port, std::string password);
 		~Server();
 
@@ -28,7 +32,7 @@ class Server
 
         void createSocket(void);
         void connectClient(void);
-		void readMesage(int &clientFd);
+		void readMesage(Client * client);
 		void newClient(std::vector<struct pollfd> &pollfds);
 };
 

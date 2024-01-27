@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef DEBUG
+# define DEBUG 0
+#endif
+
 /********************************/
 /*		Libraries				*/
 /********************************/
@@ -21,9 +25,21 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include "Messages.hpp"
+// only in linux, to use setw and setfill
+// we can change it with (numero < 10 ? "00" : (numero < 100 ? "0" : "")) + std::to_string(numero)
+#include <iomanip>
 /********************************/
 /*		Utility functions		*/
 /********************************/
+
+/*	Enum for types of state on the client */
+
+enum	CLIENT_STATUS{
+	UNKNOWN,
+	AUTH,
+	CONNECTED,
+	DISCONECT
+};
 
 /**
  * @brief check the number of arguments and if 
