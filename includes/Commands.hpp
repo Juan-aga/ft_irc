@@ -11,10 +11,13 @@ class Commands
 	private:
 		enum    _CMD
 		{
-			CAP,
+			//only UNKNOWN
 			PASS,
+			//only AUTH
+			CAP,
 			NICK,
 			USER,
+			//only CONNECTED
 			JOIN,
 			MAX_CMD
 		};

@@ -35,6 +35,8 @@ bool    Commands::checkLogin( Client & client )
 {
     if (client.status != AUTH || client.nick == "" || client.user == "" || client.realName == "")
         return false;
+    if (DEBUG)
+    	std::cout << "Client " << client.nick << " conected in FD: " << client.fd << std::endl;
     client.status = CONNECTED;
     return true;
 }
@@ -45,14 +47,13 @@ bool    Commands::processInput( const std::string & input, Client & client, Serv
     endLine = input.find("\n");
     std::string line = "";
     startLine = 0;
+    
     while (endLine != std::string::npos)
     {
         line = input.substr(startLine, endLine - startLine - 1);
         space = line.find(" ");
         if (space != std::string::npos)
         {
-            // we have to implement the check if client is auth (except for pass)
-            // if it's not auth, we have to send a response and don't do anything.
             if (!execCmd(line.substr(0, space), line.substr(space + 1, line.size()), client, server))
                 return false;
 
@@ -64,9 +65,6 @@ bool    Commands::processInput( const std::string & input, Client & client, Serv
     {
         if (checkLogin(client))
         {
-            // add to log
-            std::cout << "Client: " << client.nick << " connected.\n";
-            
             //send welcome message.
             Response::createReply(RPL_WELCOME).From(server).To(client).Trailer("Welcome to irc server.").Send();
 
@@ -86,7 +84,8 @@ bool    Commands::processInput( const std::string & input, Client & client, Serv
         if (input.find("CAP") != std::string::npos && client.status != CONNECTED)
         {
             //send failed to connect, but every single command send his message.
-            std::cout << "Client: " << client.fd << " failed to connect.\n";
+            if (DEBUG)
+            	std::cout << "Client: " << client.nick << " failed to connect from FD: " << client.fd << std::endl;
             return false;
         }
     }
@@ -105,6 +104,20 @@ bool        Commands::execCmd( const std::string & command, const std::string & 
         // discoment when all commands implemented
         //return false;
     }
+    // we have to implement the check if client is auth (except for pass)
+    // if it's not auth, we have to send a response and don't do anything.
+    else if (client.status == DISCONECT)
+    {
+    	std::cout << "Client was desconnected from the server.\n";
+     	return false;
+    }
+    else if ((client.status == UNKNOWN && cmd != PASS) || (client.status == AUTH && cmd >= JOIN))
+    {
+    	//not auth to do the command
+     	//not sure if we have to send a response to the client.
+     	std::cout << "Not authorized to execute " << command << std::endl;
+      	return false;
+    }
     else
         return commands[cmd].exec(argument, client, server);
     return true;
@@ -117,26 +130,28 @@ bool        Commands::execCap( const std::string & argument, Client & client, Se
     (void)argument;
     (void)client;
     (void)server;
-    std::cout << "Processing CAP\n";
+    if (DEBUG)
+    	std::cout << "Processing CAP\n";
     return true;
 }
 
 //if PASS fails, we have to send the response and close conection.
 bool        Commands::execPass( const std::string & argument, Client & client, Server & server )
 {
-
-    //Check that pass it's ok.
-    std::cout << "Checking pass... " << argument << std::endl;
     if (argument == server.getPassword())
     {
-        std::cout << "Pass ok.\n";
+    	if (DEBUG)
+        	std::cout << "Pass is ok.\n";
         client.status = AUTH;
         return true;
     }
     else
     {
         // we have to implement the response to the client.
-        std::cout << "Wrong pass: " << server.getPassword() << std::endl;
+        if (DEBUG)
+        	std::cout << "Wrong pass: " << server.getPassword() << std::endl;
+        // if pass fail send ERR_PASSWDMISMATCH (464) and close conection.
+        client.status = DISCONECT;
         return false;
     }
 }
@@ -148,10 +163,12 @@ bool Commands::execNick( const std::string & argument, Client & client, Server &
     // else return user change name error.
     if (server.clients.find(argument) == server.clients.end())
     {
-        server.clients.erase(argument);
-        std::cout << "Client: " << client.fd << " changed Nick from: " << client.nick;
+    	server.clients.erase(argument);
+    	if (DEBUG)	
+        	std::cout << "Client: " << client.fd << " changed Nick from: " << client.nick;
         client.nick = argument;
-        std::cout << " to: " << client.nick << std::endl;
+        if (DEBUG)
+       		std::cout << " to: " << client.nick << std::endl;
         server.clients[argument] = client;
     }
     else
@@ -168,6 +185,7 @@ bool Commands::execUser( const std::string & argument, Client & client, Server &
     // we have to implement to take the host. If it's * let it empty, it's catched later.
     (void)server;
     std::string::size_type space, colon;
+    
     space = argument.find(" ");
     colon = argument.find(":");
     if (space == std::string::npos || colon == std::string::npos)
@@ -182,7 +200,8 @@ bool Commands::execUser( const std::string & argument, Client & client, Server &
         client.realName = argument.substr(colon + 1, argument.size());
         //changed user and realname.
         // host???
-        std::cout << "User: " << client.user << " Realname: " << client.realName << std::endl;
+        if (DEBUG)
+        	std::cout << "User: " << client.user << " Realname: " << client.realName << std::endl;
     }
     return true;
 }
