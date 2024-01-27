@@ -45,13 +45,14 @@ bool    Commands::processInput( const std::string & input, Client & client, Serv
     endLine = input.find("\n");
     std::string line = "";
     startLine = 0;
-    while (endLine != std::string::npos)// || readBuffer[endLine - 1] != '\r')
+    while (endLine != std::string::npos)
     {
         line = input.substr(startLine, endLine - startLine - 1);
-        //std::cout << "Line: " << line << std::endl;
         space = line.find(" ");
         if (space != std::string::npos)
         {
+            // we have to implement the check if client is auth (except for pass)
+            // if it's not auth, we have to send a response and don't do anything.
             if (!execCmd(line.substr(0, space), line.substr(space + 1, line.size()), client, server))
                 return false;
 
@@ -63,32 +64,23 @@ bool    Commands::processInput( const std::string & input, Client & client, Serv
     {
         if (checkLogin(client))
         {
-            Response response;
-            //send welcome message.
+            // add to log
             std::cout << "Client: " << client.nick << " connected.\n";
-            std::string msg = "";
-
             
-            response.createReply(RPL_WELCOME).From(server).To(client).Content("Welcome to irc server.").Send();
-
-
-
-            //Response::createReply(RPL_WELCOME).To(client).Content("Welcome to irc server. " + client.nick).Send();
-            // msg = ":" + server.serverName + "." + server.serverHost + " 001 " + client.nick + " :Welcome to irc server.\r\n";
-            // std::cout << "RESPONSE: " << msg;
-            // send(client.fd, msg.c_str(), msg.size(), 0);
-            // we have to check in cap if host is *
+            //send welcome message.
+            Response::createReply(RPL_WELCOME).From(server).To(client).Trailer("Welcome to irc server.").Send();
 
             if (client.host == "")
             {
                 client.host = client.user + "@" + server.serverHost;
                 //not sure to need this..
-                response.createReply(ERR_HOST).From(server).To(client).Content("This is now your displayed host " + server.serverHost).Send();
+                Response::createReply(ERR_HOST).From(server).To(client).Command(server.serverHost).Trailer("This is now your displayed host").Send();
             }
-            //msg = ":" + server.serverName + "." + server.serverHost + " 396 " + client.nick + " " + server.serverHost + " :is now your displayed host\r\n";
-            //std::cout << "RESPONSE: " << msg;
-            //send(client.fd, msg.c_str(), msg.size(), 0);
-            //add to the client map
+
+            // add to the client map
+            // we have to change the map from string to fd
+            // every time the client change the nick, with string, we have to propagate it to al the channels.
+            // but if we have the pointer to the client, we don't need to do that.
             server.clients[client.nick] = client;
         }
         if (input.find("CAP") != std::string::npos && client.status != CONNECTED)
@@ -118,7 +110,7 @@ bool        Commands::execCmd( const std::string & command, const std::string & 
     return true;
 }
 
-//All commands of theserver.
+//All commands of the server.
 
 bool        Commands::execCap( const std::string & argument, Client & client, Server & server )
 {
@@ -129,8 +121,10 @@ bool        Commands::execCap( const std::string & argument, Client & client, Se
     return true;
 }
 
+//if PASS fails, we have to send the response and close conection.
 bool        Commands::execPass( const std::string & argument, Client & client, Server & server )
 {
+
     //Check that pass it's ok.
     std::cout << "Checking pass... " << argument << std::endl;
     if (argument == server.getPassword())
@@ -141,6 +135,7 @@ bool        Commands::execPass( const std::string & argument, Client & client, S
         client.authpass = true;
     }
     else
+        // we have to implement the response to the client.
         std::cout << "Wrong pass: " << server.getPassword() << std::endl;
     return client.authpass;
 }
@@ -161,14 +156,7 @@ bool Commands::execNick( const std::string & argument, Client & client, Server &
     else
     {
         //return error response nick in use. ERR_NICKNAMEINUSE (433)
-        Response    response;
-
-        response.createReply(ERR_NICKNAMEINUSE).From(server).To(client).Content("Nickname " + argument + " is already in use").Send();
-        // std::string msg = "";
-        // msg = msg = ":" + server.serverName + "." + server.serverHost + " 433 " + client.nick + " " + argument + " :Nickname is already in use\r\n";
-        // send(client.fd, msg.c_str(), msg.size(), 0);
-        // std::cout << "RESPONSE: " << msg;
-        // std::cout << "Nick " << argument << " is in use.\n";
+        Response::createReply(ERR_NICKNAMEINUSE).From(server).To(client).Command(argument).Trailer("Nickname is already in use").Send();
         return false;
     }
     return true;
@@ -176,6 +164,7 @@ bool Commands::execNick( const std::string & argument, Client & client, Server &
 
 bool Commands::execUser( const std::string & argument, Client & client, Server & server )
 {
+    // we have to implement to take the host. If it's * let it empty, it's catched later.
     (void)server;
     std::string::size_type space, colon;
     space = argument.find(" ");
@@ -191,6 +180,7 @@ bool Commands::execUser( const std::string & argument, Client & client, Server &
         client.user = argument.substr(0, space);
         client.realName = argument.substr(colon + 1, argument.size());
         //changed user and realname.
+        // host???
         std::cout << "User: " << client.user << " Realname: " << client.realName << std::endl;
     }
     return true;
@@ -198,20 +188,21 @@ bool Commands::execUser( const std::string & argument, Client & client, Server &
 
 bool        Commands::execJoin( const std::string & argument, Client & client, Server & server )
 {
-    std::string msg = "";
+    // wen we define channel class, we have to check if it exists, and the permissions on the channel.
 
     //only to test join, we don't check anything, only send like we created the channel
-    msg = ":" + client.nick + "!" + client.host + " JOIN " + argument + " * :" + client.realName + "\r\n";
-    std::cout << "RESPONSE: " << msg;
-    send(client.fd, msg.c_str(), msg.size(), 0);
-    // here send the name of clients in the channel. In this test, create one new and cleint is the operator "@" is the mode. +otroNick is a standar client to test.
-    msg = ":" + server.serverName + "." + server.serverHost + " 353 " + client.nick + " = " + argument + " :@" + client.nick + "!" + client.host + " +otroNick\r\n";
-    std::cout << "RESPONSE: " << msg;
-    send(client.fd, msg.c_str(), msg.size(), 0);
-    // last send the end fo list messagge.
-    msg = ":" + server.serverName + "." + server.serverHost + " 366 " + client.nick + " " + argument + " :End of name list.\r\n";
-    std::cout << "RESPONSE: " << msg;
-    send(client.fd, msg.c_str(), msg.size(), 0);
-    // if can't join return false
+    // not sure about last *, we have to check if it's the mode.
+    // wen we implemented broadcast, this response is for all the clients in the channel.
+    Response::createMessage().From(client).To(client).Command("JOIN " + argument + " *").Send();
+
+    // here send a list of name clients in the channel. In this test, create one new and client is the operator "@" is the mode. +otroNick is a standar client to test.
+    Response::createReply(RPL_NAMREPLY).From(server).To(client).Command("= " + argument).Trailer("@" + client.nick + " +otroNick").Send();
+
+    // last send the end of list messagge.
+    Response::createReply(RPL_ENDOFNAMES).From(server).To(client).Command(argument).Trailer("End of name list.").Send();
+
+    // test only send another client has joined 
+    Response::createMessage().Trailer("meloinvenTo JOIN " + argument).Send();
+
     return true;
 }
