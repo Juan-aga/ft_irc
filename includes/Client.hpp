@@ -7,7 +7,6 @@ private:
 	std::string _recvBuff;
 	
 public:
-	bool        authpass;
 	int         fd;
 	std::string nick;
 	std::string user;

@@ -33,7 +33,7 @@ Commands::_CMD  Commands::strToCmd( const std::string & cmd )
 
 bool    Commands::checkLogin( Client & client )
 {
-    if (!client.authpass || client.nick == "" || client.user == "" || client.realName == "")
+    if (client.status != AUTH || client.nick == "" || client.user == "" || client.realName == "")
         return false;
     client.status = CONNECTED;
     return true;
@@ -131,13 +131,14 @@ bool        Commands::execPass( const std::string & argument, Client & client, S
     {
         std::cout << "Pass ok.\n";
         client.status = AUTH;
-        //this may be delete
-        client.authpass = true;
+        return true;
     }
     else
+    {
         // we have to implement the response to the client.
         std::cout << "Wrong pass: " << server.getPassword() << std::endl;
-    return client.authpass;
+        return false;
+    }
 }
 
 bool Commands::execNick( const std::string & argument, Client & client, Server & server )
