@@ -6,8 +6,6 @@
 
 class Server;
 
-//class Response;
-
 class Commands
 {
 	private:
