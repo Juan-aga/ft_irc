@@ -25,6 +25,7 @@ class Server
 		std::map<int, Client * >	clients;
 
 		Server(int port, std::string password);
+		//Server( Server const & server );
 		~Server();
 
 		int 		const &getPort() const;
