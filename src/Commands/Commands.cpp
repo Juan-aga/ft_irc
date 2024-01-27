@@ -79,7 +79,8 @@ bool    Commands::processInput( const std::string & input, Client & client, Serv
             // we have to change the map from string to fd
             // every time the client change the nick, with string, we have to propagate it to al the channels.
             // but if we have the pointer to the client, we don't need to do that.
-            server.clients[client.nick] = client;
+            
+            //server.clients[client.fd] = & client;
         }
         if (input.find("CAP") != std::string::npos && client.status != CONNECTED)
         {
@@ -158,26 +159,46 @@ bool        Commands::execPass( const std::string & argument, Client & client, S
 
 bool Commands::execNick( const std::string & argument, Client & client, Server & server )
 {
-    (void)server;
-    //Check that nick is not used.
-    // else return user change name error.
-    if (server.clients.find(argument) == server.clients.end())
-    {
-    	server.clients.erase(argument);
-    	if (DEBUG)	
-        	std::cout << "Client: " << client.fd << " changed Nick from: " << client.nick;
-        client.nick = argument;
-        if (DEBUG)
-       		std::cout << " to: " << client.nick << std::endl;
-        server.clients[argument] = client;
-    }
-    else
-    {
-        //return error response nick in use. ERR_NICKNAMEINUSE (433)
+	std::map<int, Client *>::iterator	it;
+    
+	it = server.clients.begin();
+	for (; it != server.clients.end(); it++)
+	{
+		if (it->second->nick == argument)
+			break;
+	}
+	if (it != server.clients.end())
+	{
+  		//return error response nick in use. ERR_NICKNAMEINUSE (433)
         Response::createReply(ERR_NICKNAMEINUSE).From(server).To(client).Command(argument).Trailer("Nickname is already in use").Send();
         return false;
-    }
-    return true;
+	}
+	else
+	{
+		if (DEBUG)	
+        	std::cout << "Client: " << client.fd << " changed Nick from: " << client.nick << " to: " << argument << std::endl;
+         client.nick = argument;
+         return true;
+	}
+    // //Check that nick is not used.
+    // // else return user change name error.
+    // if (server.clients.find(argument) == server.clients.end())
+    // {
+    // 	server.clients.erase(argument);
+    // 	if (DEBUG)	
+    //     	std::cout << "Client: " << client.fd << " changed Nick from: " << client.nick;
+    //     client.nick = argument;
+    //     if (DEBUG)
+    //    		std::cout << " to: " << client.nick << std::endl;
+    //     server.clients[argument] = client;
+    // }
+    // else
+    // {
+    //     //return error response nick in use. ERR_NICKNAMEINUSE (433)
+    //     Response::createReply(ERR_NICKNAMEINUSE).From(server).To(client).Command(argument).Trailer("Nickname is already in use").Send();
+    //     return false;
+    // }
+    // return true;
 }
 
 bool Commands::execUser( const std::string & argument, Client & client, Server & server )
