@@ -52,12 +52,8 @@ bool    Commands::processInput( const std::string & input, Client & client, Serv
     {
         line = input.substr(startLine, endLine - startLine - 1);
         space = line.find(" ");
-        if (space != std::string::npos)
-        {
-            if (!execCmd(line.substr(0, space), line.substr(space + 1, line.size()), client, server))
-                return false;
-
-        }
+        if (space != std::string::npos && client.status != DISCONECT)
+            execCmd(line.substr(0, space), line.substr(space + 1, line.size()), client, server);
         startLine = endLine + 1;
         endLine = input.find('\n', startLine);
     }
@@ -67,20 +63,13 @@ bool    Commands::processInput( const std::string & input, Client & client, Serv
         {
             //send welcome message.
             Response::createReply(RPL_WELCOME).From(server).To(client).Trailer("Welcome to irc server.").Send();
-
+            //think we don't need the host...
             if (client.host == "")
             {
                 client.host = client.user + "@" + server.serverHost;
                 //not sure to need this..
                 Response::createReply(ERR_HOST).From(server).To(client).Command(server.serverHost).Trailer("This is now your displayed host").Send();
             }
-
-            // add to the client map
-            // we have to change the map from string to fd
-            // every time the client change the nick, with string, we have to propagate it to al the channels.
-            // but if we have the pointer to the client, we don't need to do that.
-            
-            //server.clients[client.fd] = & client;
         }
         if (input.find("CAP") != std::string::npos && client.status != CONNECTED)
         {
@@ -131,6 +120,7 @@ bool        Commands::execCap( const std::string & argument, Client & client, Se
     (void)argument;
     (void)client;
     (void)server;
+    //we don't handle 
     if (DEBUG)
     	std::cout << "Processing CAP\n";
     return true;
