@@ -222,20 +222,64 @@ bool Commands::execUser( const std::string & argument, Client & client, Server &
 bool        Commands::execJoin( const std::string & argument, Client & client, Server & server )
 {
     // wen we define channel class, we have to check if it exists, and the permissions on the channel.
+    std::map< int, Channel * >::iterator    it;
+    int index;
+
+    it = server.channels.begin();
+    for (; it != server.channels.end(); it++)
+    {
+        if (it->second->name == argument)
+            break;
+    }
+    //create a new channel;
+    if (it == server.channels.end())
+    {
+        index = Channel::totalCount;
+        server.channels[index] = new Channel(argument, & client);
+    }
+    else
+    {
+        //it's on channel
+        if (it->second->isClient(client.nick, server))
+        {
+            std::cout << "Client " << client.nick << " is already a member of " << it->second->name << std::endl;
+            return false;
+        }
+        //we have to check permissions.
+        else
+            it->second->addClient(&client);
+        index = it->first;
+    }
+
 
     //only to test join, we don't check anything, only send like we created the channel
     // not sure about last *, we have to check if it's the mode.
     // wen we implemented broadcast, this response is for all the clients in the channel.
-    Response::createMessage().From(client).To(client).Command("JOIN " + argument + " *").Send();
+    // Response::createMessage().From(client).To(client).Command("JOIN " + server.channels[index]->name + " *").Send();
 
-    // here send a list of name clients in the channel. In this test, create one new and client is the operator "@" is the mode. +otroNick is a standar client to test.
-    Response::createReply(RPL_NAMREPLY).From(server).To(client).Command("= " + argument).Trailer("@" + client.nick + " +otroNick").Send();
+    /// test until broadcast.
+
+    std::map<Client *, std::string>::iterator gclients;
+    std::string msg = "";
+
+    gclients = server.channels[index]->clients.begin();
+    for (; gclients != server.channels[index]->clients.end(); gclients++)
+    {
+        Response::createMessage().From(client).To(*gclients->first).Command("JOIN " + server.channels[index]->name + " " + gclients->second).Send();
+        msg += gclients->second + gclients->first->nick + " ";
+    }
+
+
+    // // here send a list of name clients in the channel. In this test, create one new and client is the operator "@" is the mode. +otroNick is a standar client to test.
+    // Response::createReply(RPL_NAMREPLY).From(server).To(client).Command("= " + argument).Trailer("@" + client.nick + " +otroNick").Send();
+
+    Response::createReply(RPL_NAMREPLY).From(server).To(client).Command("= " + argument).Trailer(msg).Send();
 
     // last send the end of list messagge.
     Response::createReply(RPL_ENDOFNAMES).From(server).To(client).Command(argument).Trailer("End of name list.").Send();
 
     // test only send another client has joined 
-    Response::createMessage().Trailer("meloinvenTo JOIN " + argument).Send();
+    //Response::createMessage().Trailer("meloinvenTo JOIN " + argument).Send();
 
     return true;
 }

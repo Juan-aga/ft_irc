@@ -39,6 +39,7 @@ HEADERS = 	includes/Server.hpp 	\
 INCLUDES =	-I ./includes
 
 ifdef DEBUG
+	CFLAGS += -g
 	DEBUG	=	1
 else
 	DEBUG	=	0

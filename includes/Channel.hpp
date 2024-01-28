@@ -16,9 +16,12 @@ class Channel
 		Channel( void );
 		
 	public:
+		static int	totalCount;
+
 		std::string	name;
 		//this is file descriptor of clients and mode in the channel
-		std::map< int, std::string >	clients;
+		//std::map< int, std::string >	clients;
+		std::map< Client * , std::string >	clients;
 		//the chanel must have more options...
 		
 		Channel( std::string const & name, Client * client );
@@ -29,6 +32,6 @@ class Channel
 		bool	delClient( Client * client );
 		bool	isClient( std::string const & nick , Server & server);
 		
-		std::map< int, std::string >	getClients( void ) const;
+		std::map< Client *, std::string >	getClients( void ) const;
 		
 };

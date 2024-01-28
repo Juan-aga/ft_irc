@@ -3,6 +3,7 @@
 #include "Utils.hpp"
 #include "Commands.hpp"
 #include "Client.hpp"
+#include "Channel.hpp"
 
 #define MAX_CONNECTS 10
 /**
@@ -18,7 +19,6 @@ class Server
 		int			_clientFd;
 		Commands	_commands;
 		bool		_running;
-		//Client		_client;// delete
 
 	public:
 		static int	numClients;
@@ -27,6 +27,7 @@ class Server
 		std::string	serverName;
 		std::string	serverHost; 
 		std::map<int, Client * >	clients;
+		std::map<int, Channel * >	channels;
 
 		Server(int port, std::string password);
 		//Server( Server const & server );
