@@ -19,6 +19,8 @@ class Commands
 			USER,
 			//only CONNECTED
 			JOIN,
+			//to close the erver.
+			KILLSERVER,
 			MAX_CMD
 		};
 		typedef bool (*cmdFunction)(const std::string &, Client &, Server &);
@@ -39,6 +41,8 @@ class Commands
 		static bool execNick( const std::string & argument, Client & client, Server & server );
 		static bool execUser( const std::string & argument, Client & client, Server & server );
 		static bool execJoin( const std::string & argument, Client & client, Server & server );
+
+		static bool execKill( const std::string & argument, Client & client, Server & server );
 
 	public:
 		Commands( void );

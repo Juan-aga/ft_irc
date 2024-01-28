@@ -17,6 +17,7 @@ class Server
         int         _socket_fd;
 		int			_clientFd;
 		Commands	_commands;
+		bool		_running;
 		//Client		_client;// delete
 
 	public:
@@ -35,6 +36,7 @@ class Server
         void connectClient(void);
 		void readMesage(Client * client);
 		void newClient(std::vector<struct pollfd> &pollfds);
+		void	stopServer( void );
 };
 
 std::ostream &	operator<<(std::ostream & o, Server const & server);

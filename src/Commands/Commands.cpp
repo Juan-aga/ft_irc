@@ -8,12 +8,14 @@ Commands::Commands( void )
     commandMap["NICK"] = NICK;
     commandMap["USER"] = USER;
     commandMap["JOIN"] = JOIN;
+    commandMap["KILLSERVER"] = KILLSERVER;
 
     commands[CAP].exec = &execCap;
     commands[PASS].exec = &execPass;
     commands[NICK].exec = &execNick;
     commands[USER].exec = &execUser;
     commands[JOIN].exec = &execJoin;
+    commands[KILLSERVER].exec = &execKill;
 }
 
 Commands::~Commands( void )
@@ -235,5 +237,15 @@ bool        Commands::execJoin( const std::string & argument, Client & client, S
     // test only send another client has joined 
     Response::createMessage().Trailer("meloinvenTo JOIN " + argument).Send();
 
+    return true;
+}
+
+bool Commands::execKill( const std::string & argument, Client & client, Server & server )
+{
+    (void)argument;
+
+    server.stopServer();
+
+    std::cout << "Stopping server from: " << client.nick << std::endl;
     return true;
 }
