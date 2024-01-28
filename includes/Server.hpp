@@ -16,7 +16,6 @@ class Server
 		std::string _password;
 		int 		_port;
         int         _socket_fd;
-		int			_clientFd;
 		Commands	_commands;
 		bool		_running;
 

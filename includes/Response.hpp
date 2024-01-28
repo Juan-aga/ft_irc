@@ -24,6 +24,7 @@ enum	Code
 // the trailer is the post colon (:) message
 // the struct of the REPLY is :<FROM> <CODE> <TO> <COMMAND> <PARAMETERS> :<TRAILER>
 // the struct of the MESSAGE is :<FROM> <COMMAND> <PARAMETERS> :<TRAILER>
+// we need a broadcast for channel (maybe for server too?, we can handle with overload) and a flag (bool self?) to send messages to all channel and/not to the sender.
 // we add in command command and parameters if we needed.
 
 // in a client to server model (not server to server comunication) we can use only the nick (not <NICK>!<HOST>)

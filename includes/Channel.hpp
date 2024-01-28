@@ -12,15 +12,12 @@ class Server;
 class Channel
 {
 	private:
-		// const Server &	server;
 		Channel( void );
 		
 	public:
 		static int	totalCount;
 
 		std::string	name;
-		//this is file descriptor of clients and mode in the channel
-		//std::map< int, std::string >	clients;
 		std::map< Client * , std::string >	clients;
 		//the chanel must have more options...
 		
