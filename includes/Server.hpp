@@ -21,6 +21,9 @@ class Server
 		//Client		_client;// delete
 
 	public:
+		static int	numClients;
+		static int	numChannels;
+
 		std::string	serverName;
 		std::string	serverHost; 
 		std::map<int, Client * >	clients;

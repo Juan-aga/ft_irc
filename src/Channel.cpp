@@ -4,12 +4,13 @@
 
 Channel::Channel( std::string const & name, Client * client ): name(name)
 {
+	Server::numChannels += 1;
 	clients[client->fd] = "@";
 }
 
 Channel::~Channel( void )
 {
-	
+	Server::numChannels -= 1;
 }
 
 bool	Channel::addClient( Client * client )

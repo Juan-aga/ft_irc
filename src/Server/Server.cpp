@@ -1,5 +1,8 @@
 #include "Server.hpp"
 
+int Server::numClients = 0;
+int Server::numChannels = 0;
+
 Server::Server(int port, std::string password): _password(password), _port(port), _clientFd(0), _running(true) ,serverName("server"), serverHost("test.irc") {}
 
 Server::~Server() {}
@@ -135,7 +138,7 @@ void Server::connectClient(void)
 		}
 	}
 	//here we have to implement a clean close of the server.
-	
+
 }
 
 void		Server::stopServer( void )
