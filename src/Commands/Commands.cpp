@@ -172,25 +172,6 @@ bool Commands::execNick( const std::string & argument, Client & client, Server &
          client.nick = argument;
          return true;
 	}
-    // //Check that nick is not used.
-    // // else return user change name error.
-    // if (server.clients.find(argument) == server.clients.end())
-    // {
-    // 	server.clients.erase(argument);
-    // 	if (DEBUG)	
-    //     	std::cout << "Client: " << client.fd << " changed Nick from: " << client.nick;
-    //     client.nick = argument;
-    //     if (DEBUG)
-    //    		std::cout << " to: " << client.nick << std::endl;
-    //     server.clients[argument] = client;
-    // }
-    // else
-    // {
-    //     //return error response nick in use. ERR_NICKNAMEINUSE (433)
-    //     Response::createReply(ERR_NICKNAMEINUSE).From(server).To(client).Command(argument).Trailer("Nickname is already in use").Send();
-    //     return false;
-    // }
-    // return true;
 }
 
 bool Commands::execUser( const std::string & argument, Client & client, Server & server )
@@ -265,7 +246,7 @@ bool        Commands::execJoin( const std::string & argument, Client & client, S
     gclients = server.channels[index]->clients.begin();
     for (; gclients != server.channels[index]->clients.end(); gclients++)
     {
-        Response::createMessage().From(client).To(*gclients->first).Command("JOIN " + server.channels[index]->name + " " + gclients->second).Send();
+        Response::createMessage().From(client).To(*gclients->first).Command("JOIN " + server.channels[index]->name + " " + server.channels[index]->clients[&client]).Send();
         msg += gclients->second + gclients->first->nick + " ";
     }
 

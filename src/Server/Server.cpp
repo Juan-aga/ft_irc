@@ -140,6 +140,8 @@ void Server::connectClient(void)
 	//here we have to implement a clean close of the server.
 	for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++)
 		delete it->second;
+	for (std::map<int, Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
+		delete it->second;
 
 }
 

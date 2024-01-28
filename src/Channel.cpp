@@ -6,9 +6,9 @@ int Channel::totalCount = 0;
 
 Channel::Channel( std::string const & name, Client * client ): name(name)
 {
+	clients[client] = "@";
 	Server::numChannels += 1;
 	totalCount += 1;
-	clients[client] = "@";
 }
 
 Channel::~Channel( void )
@@ -20,7 +20,8 @@ bool	Channel::addClient( Client * client )
 {
 	// we have to check if it's in chennel?
 	// "@" is the mode in the channel all operator to test.
-	clients[client] = "@";
+
+	clients[client] = "+";
 	return true;
 }
 
