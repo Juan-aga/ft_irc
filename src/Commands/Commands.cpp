@@ -8,12 +8,16 @@ Commands::Commands( void )
     commandMap["NICK"] = NICK;
     commandMap["USER"] = USER;
     commandMap["JOIN"] = JOIN;
+    commandMap["PRIVMSG"] = PRIVMSG;
+    commandMap["KILLSERVER"] = KILLSERVER;
 
     commands[CAP].exec = &execCap;
     commands[PASS].exec = &execPass;
     commands[NICK].exec = &execNick;
     commands[USER].exec = &execUser;
     commands[JOIN].exec = &execJoin;
+    commands[PRIVMSG].exec = &execPrivmsg;
+    commands[KILLSERVER].exec = &execKill;
 }
 
 Commands::~Commands( void )
@@ -170,25 +174,6 @@ bool Commands::execNick( const std::string & argument, Client & client, Server &
          client.nick = argument;
          return true;
 	}
-    // //Check that nick is not used.
-    // // else return user change name error.
-    // if (server.clients.find(argument) == server.clients.end())
-    // {
-    // 	server.clients.erase(argument);
-    // 	if (DEBUG)	
-    //     	std::cout << "Client: " << client.fd << " changed Nick from: " << client.nick;
-    //     client.nick = argument;
-    //     if (DEBUG)
-    //    		std::cout << " to: " << client.nick << std::endl;
-    //     server.clients[argument] = client;
-    // }
-    // else
-    // {
-    //     //return error response nick in use. ERR_NICKNAMEINUSE (433)
-    //     Response::createReply(ERR_NICKNAMEINUSE).From(server).To(client).Command(argument).Trailer("Nickname is already in use").Send();
-    //     return false;
-    // }
-    // return true;
 }
 
 bool Commands::execUser( const std::string & argument, Client & client, Server & server )
@@ -220,20 +205,148 @@ bool Commands::execUser( const std::string & argument, Client & client, Server &
 bool        Commands::execJoin( const std::string & argument, Client & client, Server & server )
 {
     // wen we define channel class, we have to check if it exists, and the permissions on the channel.
+    std::map< int, Channel * >::iterator    it;
+    int index;
+
+    it = server.channels.begin();
+    for (; it != server.channels.end(); it++)
+    {
+        if (it->second->name == argument)
+            break;
+    }
+    //create a new channel;
+    if (it == server.channels.end())
+    {
+        index = Channel::totalCount;
+        server.channels[index] = new Channel(argument, & client);
+    }
+    else
+    {
+        //it's on channel
+        if (it->second->isClient(client.nick, server))
+        {
+            std::cout << "Client " << client.nick << " is already a member of " << it->second->name << std::endl;
+            return false;
+        }
+        //we have to check permissions.
+        else
+            it->second->addClient(&client);
+        index = it->first;
+    }
+
 
     //only to test join, we don't check anything, only send like we created the channel
     // not sure about last *, we have to check if it's the mode.
     // wen we implemented broadcast, this response is for all the clients in the channel.
-    Response::createMessage().From(client).To(client).Command("JOIN " + argument + " *").Send();
+    // Response::createMessage().From(client).To(client).Command("JOIN " + server.channels[index]->name + " *").Send();
 
-    // here send a list of name clients in the channel. In this test, create one new and client is the operator "@" is the mode. +otroNick is a standar client to test.
-    Response::createReply(RPL_NAMREPLY).From(server).To(client).Command("= " + argument).Trailer("@" + client.nick + " +otroNick").Send();
+    /// test until broadcast.
+
+    std::map<Client *, std::string>::iterator gclients;
+    std::string msg = "";
+
+    gclients = server.channels[index]->clients.begin();
+    for (; gclients != server.channels[index]->clients.end(); gclients++)
+    {
+        Response::createMessage().From(client).To(*gclients->first).Command("JOIN " + server.channels[index]->name + " " + server.channels[index]->clients[&client]).Send();
+        msg += gclients->second + gclients->first->nick + " ";
+    }
+
+
+    // // here send a list of name clients in the channel. In this test, create one new and client is the operator "@" is the mode. +otroNick is a standar client to test.
+    // Response::createReply(RPL_NAMREPLY).From(server).To(client).Command("= " + argument).Trailer("@" + client.nick + " +otroNick").Send();
+
+    Response::createReply(RPL_NAMREPLY).From(server).To(client).Command("= " + argument).Trailer(msg).Send();
 
     // last send the end of list messagge.
     Response::createReply(RPL_ENDOFNAMES).From(server).To(client).Command(argument).Trailer("End of name list.").Send();
 
     // test only send another client has joined 
-    Response::createMessage().Trailer("meloinvenTo JOIN " + argument).Send();
+    //Response::createMessage().Trailer("meloinvenTo JOIN " + argument).Send();
 
+    return true;
+}
+
+bool    Commands::execPrivmsg( const std::string & argument, Client & client, Server & server )
+{
+    std::string to, msg;
+    std::string::size_type space, colon;
+
+    space = argument.find(" ");
+    colon = argument.find(":");
+    if (space == std::string::npos || colon == std::string::npos)
+    {
+        std::cout << "Error parsing PRIVMSG.\n";
+        return false;
+    }
+    else
+    {
+        to = argument.substr(0, space);
+        msg = argument.substr(colon + 1, argument.size());
+        //check if channel exist. can create a method in the server class;
+        std::map< int, Channel * >::iterator    it;
+
+        it = server.channels.begin();
+        for (; it != server.channels.end(); it++)
+        {
+            if (it->second->name == to)
+                break;
+        }
+        if (it != server.channels.end())
+        {
+            if (it->second->isClient(client.nick, server))
+            {
+                //send broadcast to all the channel
+                    std::map<Client *, std::string>::iterator gclients;
+
+                    //works if we check that channels must start with #, we have to implement the checkers for valid characters for users and channels.
+                    for (gclients = it->second->clients.begin(); gclients != it->second->clients.end(); gclients++)
+                    {
+                        if (gclients->first->nick != client.nick)
+                            Response::createMessage().From(client).To(*gclients->first).Command("PRIVMSG " + to + " " + msg).Send();
+                    }
+            }
+            else
+            {
+                //the client is not on the channel
+                std::cout << client.nick << " is not in " << it->second->name << " can't send messages.\n";
+                return false;
+            }
+        }
+        //check if is a client
+        else
+        {
+            std::map<int, Client *>::iterator	it;
+    
+            it = server.clients.begin();
+            for (; it != server.clients.end(); it++)
+            {
+                if (it->second->nick == to)
+                    break;
+            }
+            if (it != server.clients.end())
+            {
+                //send to this client:
+                Response::createMessage().From(client).To(*it->second).Command("PRIVMSG " + to).Trailer(msg).Send();
+            }
+            else
+            {
+                //the client don't exist
+                std::cout << to << " client don't exist.\n";
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+
+bool Commands::execKill( const std::string & argument, Client & client, Server & server )
+{
+    (void)argument;
+
+    server.stopServer();
+
+    std::cout << "Stopping server from: " << client.nick << std::endl;
     return true;
 }

@@ -1,6 +1,9 @@
 #include "Server.hpp"
 
-Server::Server(int port, std::string password): _password(password), _port(port), _clientFd(0), serverName("server"), serverHost("test.irc") {}
+int Server::numClients = 0;
+int Server::numChannels = 0;
+
+Server::Server(int port, std::string password): _password(password), _port(port), _clientFd(0), _running(true) ,serverName("server"), serverHost("test.irc") {}
 
 Server::~Server() {}
 
@@ -121,7 +124,7 @@ void Server::connectClient(void)
 	std::vector<struct pollfd> pollfds;
 	pollfds.push_back((struct pollfd){this->_socket_fd, POLLIN, 0});
 
-	while (poll(&pollfds[0], pollfds.size(), -1))
+	while (poll(&pollfds[0], pollfds.size(), -1) && _running)
 	{
 		for (int i = 0; i < int(pollfds.size()); i++)
 		{
@@ -134,8 +137,18 @@ void Server::connectClient(void)
 			}
 		}
 	}
-	
-}            
+	//here we have to implement a clean close of the server.
+	for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++)
+		delete it->second;
+	for (std::map<int, Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
+		delete it->second;
+
+}
+
+void		Server::stopServer( void )
+{
+	_running = false;
+}
 
 std::ostream &	operator<<(std::ostream & o, Server const & server)
 {

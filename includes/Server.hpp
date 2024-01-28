@@ -3,6 +3,7 @@
 #include "Utils.hpp"
 #include "Commands.hpp"
 #include "Client.hpp"
+#include "Channel.hpp"
 
 #define MAX_CONNECTS 10
 /**
@@ -17,14 +18,20 @@ class Server
         int         _socket_fd;
 		int			_clientFd;
 		Commands	_commands;
-		//Client		_client;// delete
+		bool		_running;
 
 	public:
+		static int	numClients;
+		static int	numChannels;
+
 		std::string	serverName;
-		std::string	serverHost; 
+		std::string	serverHost;
+		//really need the map? can we use vec<CLient*> ???
 		std::map<int, Client * >	clients;
+		std::map<int, Channel * >	channels;
 
 		Server(int port, std::string password);
+		//Server( Server const & server );
 		~Server();
 
 		int 		const &getPort() const;
@@ -34,6 +41,7 @@ class Server
         void connectClient(void);
 		void readMesage(Client * client);
 		void newClient(std::vector<struct pollfd> &pollfds);
+		void	stopServer( void );
 };
 
 std::ostream &	operator<<(std::ostream & o, Server const & server);
