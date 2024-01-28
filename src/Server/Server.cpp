@@ -145,6 +145,26 @@ void Server::connectClient(void)
 
 }
 
+Channel *	Server::getChannelByName( std::string const & name )
+{
+	for (std::map< int, Channel * >::iterator it = channels.begin(); it != channels.end(); it++)
+	{
+		if (it->second->name == name)
+			return it->second;
+	}
+	return NULL;
+}
+
+Client *	Server::getClientByNick( std::string const & nick )
+{
+	for (std::map< int, Client * >::iterator it = clients.begin(); it != clients.end(); it++)
+	{
+		if (it->second->nick == nick)
+			return it->second;
+	}
+	return NULL;
+}
+
 void		Server::stopServer( void )
 {
 	_running = false;

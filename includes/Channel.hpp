@@ -13,7 +13,6 @@ class Channel
 {
 	private:
 		// const Server &	server;
-		Channel( void );
 		
 	public:
 		static int	totalCount;
@@ -24,13 +23,14 @@ class Channel
 		std::map< Client * , std::string >	clients;
 		//the chanel must have more options...
 		
+		Channel( void );
 		Channel( std::string const & name, Client * client );
 		~Channel( void );
 		
 		//maybe pass the mode for this channel, or assign here???
 		bool	addClient( Client * client );
 		bool	delClient( Client * client );
-		bool	isClient( std::string const & nick , Server & server);
+		bool	isClient( std::string const & nick );
 		
 		std::map< Client *, std::string >	getClients( void ) const;
 		std::string							getNamereply( void );

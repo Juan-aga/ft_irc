@@ -4,6 +4,11 @@
 
 int Channel::totalCount = 0;
 
+Channel::Channel( void ): name("")
+{
+
+}
+
 Channel::Channel( std::string const & name, Client * client ): name(name)
 {
 	clients[client] = "@";
@@ -31,9 +36,8 @@ bool	Channel::delClient( Client * client )
 	return true;
 }
 
-bool	Channel::isClient( std::string const & nick, Server & server)
+bool	Channel::isClient( std::string const & nick)
 {
-	(void)server;
 	std::map< Client*, std::string >::iterator	it;
 
 	it = this->clients.begin();
