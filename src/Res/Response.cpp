@@ -35,7 +35,6 @@ Response Response::createMessage()
 Response Response::createReply(const Code &code)
 {
 	Response response;
-	//response.from = from;
 	response.code = code;
 	response.type = REPLY;
 	return response;

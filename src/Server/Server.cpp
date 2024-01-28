@@ -3,7 +3,7 @@
 int Server::numClients = 0;
 int Server::numChannels = 0;
 
-Server::Server(int port, std::string password): _password(password), _port(port), _clientFd(0), _running(true) ,serverName("server"), serverHost("test.irc") {}
+Server::Server(int port, std::string password): _password(password), _port(port), _running(true) ,serverName("server"), serverHost("test.irc") {}
 
 Server::~Server() {}
 
@@ -63,7 +63,6 @@ void Server::readMesage(Client * client)
 {
 	int readed = 0;
 	std::string readBuffer = "";
-	std::string tmpBuffer = "";
 	char buffer[1024]; //save the message
 
 
@@ -73,6 +72,7 @@ void Server::readMesage(Client * client)
 		readed = recv(client->fd, buffer, 1024, 0);
 		if (!readed || client->status == DISCONECT)
 		{
+			// maybe make a function for this?
 			if (DEBUG && !readed)
 				std::cout << "Connection closed by client " << client->fd << std::endl;
 			close(client->fd);
@@ -83,22 +83,18 @@ void Server::readMesage(Client * client)
 		}
 		if (readed == -1)
 		{
-			//failed to read from client.
+			//failed to read from client. we need to send a RPL??
 			if (DEBUG)
 				std::cout << "Failed to read from " << client->nick << " in fd: " << client->fd << std::endl;
 			return;
 		}
-		tmpBuffer = buffer;
-		readBuffer.append(tmpBuffer);
+		readBuffer.append(buffer);
 		if (readBuffer.find("\r\n"))
 		{
-			std::cout << "Readed: " << tmpBuffer << std::endl;
+			std::cout << "Readed: " << readBuffer << std::endl;
 			break;
 		}
 	}
-	//client.fd = clientFd;
-	// process input handle in other function
-	// this may change with poll
 	_commands.processInput(readBuffer, *client, *this);
 }
 
@@ -106,15 +102,16 @@ void Server::newClient(std::vector<struct pollfd>& pollfds)
 {
     sockaddr_in clientAddress;
     socklen_t addrlen = sizeof(clientAddress);
+	int					clientFd;
 
-    this->_clientFd = accept(this->_socket_fd, (sockaddr *)&clientAddress, &addrlen);
+    clientFd = accept(this->_socket_fd, (sockaddr *)&clientAddress, &addrlen);
 
-    if (this->_clientFd != -1)
+    if (clientFd != -1)
     {
-        fcntl(this->_clientFd, F_SETFL, O_NONBLOCK);
-        pollfds.push_back((struct pollfd){this->_clientFd, POLLIN | POLLOUT, 0});
+        fcntl(clientFd, F_SETFL, O_NONBLOCK);
+        pollfds.push_back((struct pollfd){clientFd, POLLIN | POLLOUT, 0});
         Client		*client = new Client;
-        client->fd = _clientFd;
+        client->fd = clientFd;
         clients[client->fd] = client;
     }
 }
@@ -122,8 +119,8 @@ void Server::newClient(std::vector<struct pollfd>& pollfds)
 void Server::connectClient(void)
 {
 	std::vector<struct pollfd> pollfds;
-	pollfds.push_back((struct pollfd){this->_socket_fd, POLLIN, 0});
 
+	pollfds.push_back((struct pollfd){this->_socket_fd, POLLIN, 0});
 	while (poll(&pollfds[0], pollfds.size(), -1) && _running)
 	{
 		for (int i = 0; i < int(pollfds.size()); i++)
@@ -142,7 +139,6 @@ void Server::connectClient(void)
 		delete it->second;
 	for (std::map<int, Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
 		delete it->second;
-
 }
 
 Channel *	Server::getChannelByName( std::string const & name )

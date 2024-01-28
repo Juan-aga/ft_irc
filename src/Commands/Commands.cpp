@@ -92,27 +92,18 @@ bool        Commands::execCmd( const std::string & command, const std::string & 
 
     cmd = strToCmd(command);
     if (cmd == MAX_CMD)
-    {
-        //command not founnd.
         std::cout << "Command " << command << " not found.\nArguments: " << argument << std::endl;
-        // discoment when all commands implemented
-        //return false;
-    }
     else if (client.status == DISCONECT)
-    {
     	std::cout << "Client was desconnected from the server.\n";
-     	return false;
-    }
     else if ((client.status == UNKNOWN && cmd > CAP) || (client.status == AUTH && cmd >= JOIN))
     {
     	//not auth to do the command
      	//not sure if we have to send a response to the client.
      	std::cout << "Not authorized to execute " << command << std::endl;
-      	return false;
     }
     else
         return commands[cmd].exec(argument, client, server);
-    return true;
+    return false;
 }
 
 //All commands of the server.
@@ -178,6 +169,7 @@ bool Commands::execUser( const std::string & argument, Client & client, Server &
     if (space == std::string::npos || colon == std::string::npos)
     {
         //error on user get user o realname.
+        //check if we haver to send a reply
         std::cout << "Error parsing user or realname.\n";
         return false;
     }
@@ -267,6 +259,7 @@ bool    Commands::execPrivmsg( const std::string & argument, Client & client, Se
             else
             {
                 //the client don't exist
+                // check if we have to send a RPL
                 std::cout << to << " client don't exist.\n";
                 return false;
             }
