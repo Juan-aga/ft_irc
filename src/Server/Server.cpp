@@ -56,27 +56,33 @@ void Server::createSocket()
 	this->_socket_fd = fdSocket;
 }
 
-void Server::readMesage(int &clientFd)
+void Server::readMesage(Client * client)
 {
 	int readed = 0;
 	std::string readBuffer = "";
 	std::string tmpBuffer = "";
 	char buffer[1024]; //save the message
 
+
 	memset(buffer, 0, 1024);
 	while (1)
 	{
-		readed = recv(clientFd, buffer, 1024, 0);
-		if (!readed)
+		readed = recv(client->fd, buffer, 1024, 0);
+		if (!readed || client->status == DISCONECT)
 		{
-			//connection close, delete client.
-			std::cout << "Connection closed by client " << clientFd << std::endl;
-			close(clientFd);
-			break;
+			if (DEBUG && !readed)
+				std::cout << "Connection closed by client " << client->fd << std::endl;
+			close(client->fd);
+			client->status = DISCONECT;
+			clients.erase(client->fd);
+			delete client;
+			return;
 		}
 		if (readed == -1)
 		{
 			//failed to read from client.
+			if (DEBUG)
+				std::cout << "Failed to read from " << client->nick << " in fd: " << client->fd << std::endl;
 			return;
 		}
 		tmpBuffer = buffer;
@@ -87,10 +93,10 @@ void Server::readMesage(int &clientFd)
 			break;
 		}
 	}
-	_client.fd = clientFd;
+	//client.fd = clientFd;
 	// process input handle in other function
 	// this may change with poll
-	_commands.processInput(readBuffer, _client, *this);
+	_commands.processInput(readBuffer, *client, *this);
 }
 
 void Server::newClient(std::vector<struct pollfd>& pollfds)
@@ -104,6 +110,9 @@ void Server::newClient(std::vector<struct pollfd>& pollfds)
     {
         fcntl(this->_clientFd, F_SETFL, O_NONBLOCK);
         pollfds.push_back((struct pollfd){this->_clientFd, POLLIN | POLLOUT, 0});
+        Client		*client = new Client;
+        client->fd = _clientFd;
+        clients[client->fd] = client;
     }
 }
 
@@ -121,7 +130,7 @@ void Server::connectClient(void)
 				if (pollfds[i].fd == this->_socket_fd)
 					newClient(pollfds);
 				else
-					readMesage(pollfds[i].fd);
+					readMesage(clients[pollfds[i].fd]);
 			}
 		}
 	}
