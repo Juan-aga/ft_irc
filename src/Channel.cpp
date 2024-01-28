@@ -52,3 +52,12 @@ std::map< Client *, std::string >	Channel::getClients( void ) const
 {
 	return clients;
 }
+
+std::string							Channel::getNamereply( void )
+{
+	std:: string	msg = "";
+
+	for (std::map<Client *, std::string>::iterator gclients = clients.begin(); gclients != clients.end(); gclients++)
+		msg += gclients->second + gclients->first->nick + " ";
+	return msg;
+}

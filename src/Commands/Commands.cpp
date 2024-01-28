@@ -234,36 +234,15 @@ bool        Commands::execJoin( const std::string & argument, Client & client, S
         index = it->first;
     }
 
-
-    //only to test join, we don't check anything, only send like we created the channel
-    // not sure about last *, we have to check if it's the mode.
-    // wen we implemented broadcast, this response is for all the clients in the channel.
-    // Response::createMessage().From(client).To(client).Command("JOIN " + server.channels[index]->name + " *").Send();
-
     /// test until broadcast.
-
-    std::map<Client *, std::string>::iterator gclients;
-    std::string msg = "";
-
-    gclients = server.channels[index]->clients.begin();
-    for (; gclients != server.channels[index]->clients.end(); gclients++)
-    {
+    for (std::map<Client *, std::string>::iterator gclients = server.channels[index]->clients.begin(); gclients != server.channels[index]->clients.end(); gclients++)
         Response::createMessage().From(client).To(*gclients->first).Command("JOIN " + server.channels[index]->name + " " + server.channels[index]->clients[&client]).Send();
-        msg += gclients->second + gclients->first->nick + " ";
-    }
 
-
-    // // here send a list of name clients in the channel. In this test, create one new and client is the operator "@" is the mode. +otroNick is a standar client to test.
-    // Response::createReply(RPL_NAMREPLY).From(server).To(client).Command("= " + argument).Trailer("@" + client.nick + " +otroNick").Send();
-
+    std::string msg = server.channels[index]->getNamereply();
     Response::createReply(RPL_NAMREPLY).From(server).To(client).Command("= " + argument).Trailer(msg).Send();
 
     // last send the end of list messagge.
     Response::createReply(RPL_ENDOFNAMES).From(server).To(client).Command(argument).Trailer("End of name list.").Send();
-
-    // test only send another client has joined 
-    //Response::createMessage().Trailer("meloinvenTo JOIN " + argument).Send();
-
     return true;
 }
 
@@ -313,7 +292,8 @@ bool    Commands::execPrivmsg( const std::string & argument, Client & client, Se
                 return false;
             }
         }
-        //check if is a client
+        //check if is a client. it will be better wen implemented the checker for valid names for nick and channels
+        // if start with # it's a channel, else a user.
         else
         {
             std::map<int, Client *>::iterator	it;

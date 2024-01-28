@@ -33,5 +33,6 @@ class Channel
 		bool	isClient( std::string const & nick , Server & server);
 		
 		std::map< Client *, std::string >	getClients( void ) const;
+		std::string							getNamereply( void );
 		
 };
