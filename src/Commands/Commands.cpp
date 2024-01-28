@@ -204,7 +204,6 @@ bool        Commands::execJoin( const std::string & argument, Client & client, S
     Channel *   channel;
 
     channel = server.getChannelByName(argument);
-
     if (channel)
     {
         //it's on channel
@@ -215,25 +214,14 @@ bool        Commands::execJoin( const std::string & argument, Client & client, S
         }
         //we have to check permmisions
         else
-            channel->addClient(&client);
+            channel->addClient(&client, server);
     }
     //create a new channel;
     else
     {
-        server.channels[Channel::totalCount] = new Channel(argument, & client);
+        server.channels[Channel::totalCount] = new Channel(argument, & client, server);
         channel = server.getChannelByName(argument);
     }
-
-
-    /// test until broadcast.
-    for (std::map<Client *, std::string>::iterator gclients = channel->clients.begin(); gclients != channel->clients.end(); gclients++)
-        Response::createMessage().From(client).To(*gclients->first).Command("JOIN " + channel->name + " " + channel->clients[&client]).Send();
-
-    std::string msg = channel->getNamereply();
-    Response::createReply(RPL_NAMREPLY).From(server).To(client).Command("= " + argument).Trailer(msg).Send();
-
-    // last send the end of list messagge.
-    Response::createReply(RPL_ENDOFNAMES).From(server).To(client).Command(argument).Trailer("End of name list.").Send();
     return true;
 }
 
