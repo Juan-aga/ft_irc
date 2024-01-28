@@ -19,6 +19,7 @@ class Commands
 			USER,
 			//only CONNECTED
 			JOIN,
+			PRIVMSG,
 			//to close the erver.
 			KILLSERVER,
 			MAX_CMD
@@ -41,6 +42,7 @@ class Commands
 		static bool execNick( const std::string & argument, Client & client, Server & server );
 		static bool execUser( const std::string & argument, Client & client, Server & server );
 		static bool execJoin( const std::string & argument, Client & client, Server & server );
+		static bool execPrivmsg( const std::string & argument, Client & client, Server & server );
 
 		static bool execKill( const std::string & argument, Client & client, Server & server );
 

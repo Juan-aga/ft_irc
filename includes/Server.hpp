@@ -25,7 +25,8 @@ class Server
 		static int	numChannels;
 
 		std::string	serverName;
-		std::string	serverHost; 
+		std::string	serverHost;
+		//really need the map? can we use vec<CLient*> ???
 		std::map<int, Client * >	clients;
 		std::map<int, Channel * >	channels;
 

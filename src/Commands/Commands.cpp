@@ -8,6 +8,7 @@ Commands::Commands( void )
     commandMap["NICK"] = NICK;
     commandMap["USER"] = USER;
     commandMap["JOIN"] = JOIN;
+    commandMap["PRIVMSG"] = PRIVMSG;
     commandMap["KILLSERVER"] = KILLSERVER;
 
     commands[CAP].exec = &execCap;
@@ -15,6 +16,7 @@ Commands::Commands( void )
     commands[NICK].exec = &execNick;
     commands[USER].exec = &execUser;
     commands[JOIN].exec = &execJoin;
+    commands[PRIVMSG].exec = &execPrivmsg;
     commands[KILLSERVER].exec = &execKill;
 }
 
@@ -264,6 +266,77 @@ bool        Commands::execJoin( const std::string & argument, Client & client, S
 
     return true;
 }
+
+bool    Commands::execPrivmsg( const std::string & argument, Client & client, Server & server )
+{
+    std::string to, msg;
+    std::string::size_type space, colon;
+
+    space = argument.find(" ");
+    colon = argument.find(":");
+    if (space == std::string::npos || colon == std::string::npos)
+    {
+        std::cout << "Error parsing PRIVMSG.\n";
+        return false;
+    }
+    else
+    {
+        to = argument.substr(0, space);
+        msg = argument.substr(colon + 1, argument.size());
+        //check if channel exist. can create a method in the server class;
+        std::map< int, Channel * >::iterator    it;
+
+        it = server.channels.begin();
+        for (; it != server.channels.end(); it++)
+        {
+            if (it->second->name == to)
+                break;
+        }
+        if (it != server.channels.end())
+        {
+            if (it->second->isClient(client.nick, server))
+            {
+                //send broadcast to all the channel
+                    std::map<Client *, std::string>::iterator gclients;
+
+                    gclients = it->second->clients.begin();
+                    for (; gclients != it->second->clients.end(); gclients++)
+                        Response::createMessage().From(client).To(*gclients->first).Command("PRIVMSG").Trailer(msg).Send();
+            }
+            else
+            {
+                //the client is not on the channel
+                std::cout << client.nick << " is not in " << it->second->name << " can't send messages.\n";
+                return false;
+            }
+        }
+        //check if is a client
+        else
+        {
+            std::map<int, Client *>::iterator	it;
+    
+            it = server.clients.begin();
+            for (; it != server.clients.end(); it++)
+            {
+                if (it->second->nick == to)
+                    break;
+            }
+            if (it != server.clients.end())
+            {
+                //send to this client:
+                Response::createMessage().From(client).To(*it->second).Command("PRIVMSG " + to).Trailer(msg).Send();
+            }
+            else
+            {
+                //the client don't exist
+                std::cout << to << " client don't exist.\n";
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 
 bool Commands::execKill( const std::string & argument, Client & client, Server & server )
 {
