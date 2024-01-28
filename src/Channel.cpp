@@ -9,7 +9,7 @@ Channel::Channel( void ): name("")
 
 }
 
-Channel::Channel( std::string const & name, Client * client, Server const & server ): name(name)
+Channel::Channel( std::string const & name, Client * client, Server const & server ): _numClients(1), name(name)
 {
     std::string msg;
 
@@ -20,7 +20,6 @@ Channel::Channel( std::string const & name, Client * client, Server const & serv
 	Response::createMessage().From(*client).To(*client).Command("JOIN " + name + " " + clients[client]).Send();
     Response::createReply(RPL_NAMREPLY).From(server).To(*client).Command("= " + name).Trailer(msg).Send();
     Response::createReply(RPL_ENDOFNAMES).From(server).To(*client).Command(name).Trailer("End of name list.").Send();
-
 }
 
 Channel::~Channel( void )
@@ -30,11 +29,11 @@ Channel::~Channel( void )
 
 bool	Channel::addClient( Client * client, Server const & server )
 {
-	// we have to check if it's in chennel?
-	// "@" is the mode in the channel all operator to test.
     std::string msg;
 
+	/// we need to view channels mode. to test "+"
 	clients[client] = "+";
+	_numClients += 1;
 	msg = getNamereply();
 	for (std::map<Client *, std::string>::iterator gclients = clients.begin(); gclients != clients.end(); gclients++)
 		Response::createMessage().From(*client).To(*gclients->first).Command("JOIN " + name + " " + clients[client]).Send();
@@ -47,6 +46,8 @@ bool	Channel::delClient( Client * client, Server const & server )
 {
 	(void)server;
 	clients.erase(client);
+	if (--_numClients <= 0)
+	{}//we need to delete this channel.. maybe create a function on the server?
 	// server need to broadcast that the client was quit.
 	return true;
 }
@@ -65,11 +66,6 @@ bool	Channel::isClient( std::string const & nick)
 		return true;
 	else
 		return false;
-}
-
-std::map< Client *, std::string >	Channel::getClients( void ) const
-{
-	return clients;
 }
 
 std::string							Channel::getNamereply( void )
