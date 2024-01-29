@@ -122,7 +122,11 @@ bool        Commands::execCap( const std::string & argument, Client & client, Se
 //if PASS fails, we have to send the response and close conection.
 bool        Commands::execPass( const std::string & argument, Client & client, Server & server )
 {
-    if (argument == server.getPassword())
+	if (argument.empty())
+		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(client).Command("PASS").Trailer("Not enough parameters").Send();
+	else if (client.status >= CONNECTED)
+  		Response::createReply(ERR_ALREADYREGISTERED).From(server).To(client).Trailer("You may not reregister").Send();
+	else if (argument == server.getPassword())
     {
     	if (DEBUG)
         	std::cout << "Pass is ok.\n";
@@ -131,25 +135,26 @@ bool        Commands::execPass( const std::string & argument, Client & client, S
     }
     else
     {
-        // we have to implement the response to the client.
-        if (DEBUG)
-        	std::cout << "Wrong pass: " << server.getPassword() << std::endl;
-        // if pass fail send ERR_PASSWDMISMATCH (464) and close conection.
+    	Response::createReply(ERR_PASSWDMISMATCH).From(server).To(client).Trailer("Password incorrect").Send();
         client.status = DISCONECT;
-        return false;
     }
+    return false;
 }
 
 bool Commands::execNick( const std::string & argument, Client & client, Server & server )
 {
     Client * check;
 
-    check = server.getClientByNick(argument);
-    if (check)
-        Response::createReply(ERR_NICKNAMEINUSE).From(server).To(client).Command(argument).Trailer("Nickname is already in use").Send();
+    if (argument.empty())
+    	Response::createReply(ERR_NONICKNAMEGIVEN).From(server).To(client).Trailer("No nickname given").Send();
+    // else if (argument is invvalid nick)
+    // 	Response::createReply(ERR_ERRONEUSNICKNAME).From(server).To(client).Command(argument).Trailer("Erroneus nickname").Send();
     else
-	{
-        // we need to propagate the change to the channels.
+    {
+    	check = server.getClientByNick(argument);
+     	if (check)
+        Response::createReply(ERR_NICKNAMEINUSE).From(server).To(client).Command(argument).Trailer("Nickname is already in use").Send();
+        else
 		if (DEBUG)	
         	std::cout << "Client: " << client.fd << " changed Nick from: " << client.nick << " to: " << argument << std::endl;
          client.nick = argument;
@@ -166,23 +171,25 @@ bool Commands::execUser( const std::string & argument, Client & client, Server &
     
     space = argument.find(" ");
     colon = argument.find(":");
-    if (space == std::string::npos || colon == std::string::npos)
-    {
-        //error on user get user o realname.
-        //check if we haver to send a reply
-        std::cout << "Error parsing user or realname.\n";
-        return false;
-    }
+    if (argument.empty())
+  		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(client).Command("USER").Trailer("Not enough parameters").Send();
+    else if (client.status >= CONNECTED)
+    	Response::createReply(ERR_ALREADYREGISTERED).From(server).To(client).Trailer("You may not reregister").Send();
     else
     {
-        client.user = argument.substr(0, space);
-        client.realName = argument.substr(colon + 1, argument.size());
-        //changed user and realname.
-        // host???
+    	if (space == std::string::npos)
+     		client.user = client.nick;
+       	else
+        	client.user = argument.substr(0, space);
+        if (colon == std::string::npos)
+        	client.realName = client.nick;
+        else
+        	client.realName = argument.substr(colon + 1, argument.size());
         if (DEBUG)
         	std::cout << "User: " << client.user << " Realname: " << client.realName << std::endl;
+        return true;
     }
-    return true;
+    return false;
 }
 
 bool        Commands::execJoin( const std::string & argument, Client & client, Server & server )
