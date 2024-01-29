@@ -2,8 +2,9 @@
 
 int Server::numClients = 0;
 int Server::numChannels = 0;
+bool Server::_running = true;
 
-Server::Server(int port, std::string password): _password(password), _port(port), _running(true) ,serverName("server"), serverHost("test.irc") {}
+Server::Server(int port, std::string password): _password(password), _port(port),serverName("server"), serverHost("test.irc") {}
 
 Server::~Server() {}
 
