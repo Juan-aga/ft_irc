@@ -35,7 +35,7 @@ class Commands
 
 		Commands::_CMD  strToCmd( const std::string & cmd );
 
-		bool        checkLogin( Client & client );
+		bool        checkLogin( Client & client, Server const & server );
 
 		static bool execCap( const std::string & argument, Client & client, Server & server );
 		static bool execPass( const std::string & argument, Client & client, Server & server );
