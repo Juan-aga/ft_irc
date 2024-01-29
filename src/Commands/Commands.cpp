@@ -144,10 +144,12 @@ bool Commands::execNick( const std::string & argument, Client & client, Server &
 {
     Client * check;
     
-    if (argumets )
+    std::cout << argument << std::endl;
+    if (!parseNick(argument))
     {
     	//send a response if it is not valid
-    }
+     	return false;
+	}
     check = server.getClientByNick(argument);
     if (check)
         Response::createReply(ERR_NICKNAMEINUSE).From(server).To(client).Command(argument).Trailer("Nickname is already in use").Send();
@@ -286,4 +288,19 @@ bool Commands::execKill( const std::string & argument, Client & client, Server &
 
     std::cout << "Stopping server from: " << client.nick << std::endl;
     return true;
+}
+
+bool Commands::parseNick( const std::string & argument)
+{
+	// check leading chaaracters first
+	if (argument[0] == '#'  || argument[0] == ':')
+		return false;
+	// check if there is an ascii space <' '>	
+	for (int i = 0; i < int(argument.size()); i++)
+	{
+		if (argument[i] == ' ')
+			return false;
+	}
+	
+	return true;
 }

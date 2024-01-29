@@ -36,6 +36,7 @@ class Commands
 		Commands::_CMD  strToCmd( const std::string & cmd );
 
 		bool        checkLogin( Client & client, Server const & server );
+		static bool	parseNick( const std::string & argument);
 
 		static bool execCap( const std::string & argument, Client & client, Server & server );
 		static bool execPass( const std::string & argument, Client & client, Server & server );
@@ -43,9 +44,8 @@ class Commands
 		static bool execUser( const std::string & argument, Client & client, Server & server );
 		static bool execJoin( const std::string & argument, Client & client, Server & server );
 		static bool execPrivmsg( const std::string & argument, Client & client, Server & server );
-
 		static bool execKill( const std::string & argument, Client & client, Server & server );
-
+		
 	public:
 		Commands( void );
 		~Commands( void );
