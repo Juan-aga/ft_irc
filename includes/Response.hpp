@@ -54,6 +54,7 @@ class Response
 		Response &	Command( const std::string & command );
 		Response& Trailer(const std::string &trailer);
 		void Send();
+		void Broadcast(std::map<Client *, std::string> clients, bool self);
 
 		//we need to implement a broadcast to al clients in a channel, when channel class has been implemented.
 		//it could be a To channel.

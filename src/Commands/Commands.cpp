@@ -230,16 +230,7 @@ bool    Commands::execPrivmsg( const std::string & argument, Client & client, Se
         if (channel)
         {
             if (channel->isClient(client.nick))
-            {
-                //send broadcast to all the channel
-                std::map<Client *, std::string>::iterator gclients;
-                //works if we check that channels must start with #, we have to implement the checkers for valid characters for users and channels.
-                for (gclients = channel->clients.begin(); gclients != channel->clients.end(); gclients++)
-                {
-                    if (gclients->first->nick != client.nick)
-                        Response::createMessage().From(client).To(*gclients->first).Command("PRIVMSG " + to + " " + msg).Send();
-                }
-            }
+                Response::createMessage().From(client).Command("PRIVMSG " + to + " " + msg).Broadcast(channel->clients, false);
             else
             {
                 //the client is not on the channel

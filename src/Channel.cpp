@@ -35,8 +35,7 @@ bool	Channel::addClient( Client * client, Server const & server )
 	clients[client] = "+";
 	_numClients += 1;
 	msg = getNamereply();
-	for (std::map<Client *, std::string>::iterator gclients = clients.begin(); gclients != clients.end(); gclients++)
-		Response::createMessage().From(*client).To(*gclients->first).Command("JOIN " + name + " " + clients[client]).Send();
+	Response::createMessage().From(*client).Command("JOIN " + name + " " + clients[client]).Broadcast(clients, true);
     Response::createReply(RPL_NAMREPLY).From(server).To(*client).Command("= " + name).Trailer(msg).Send();
     Response::createReply(RPL_ENDOFNAMES).From(server).To(*client).Command(name).Trailer("End of name list.").Send();
 	return true;

@@ -20,6 +20,7 @@ CPPFILES = 	main.cpp 				\
 			Utils/checkArgs.cpp 	\
 			Utils/addFileLog.cpp	\
 			Utils/getTime.cpp		\
+			Utils/signals.cpp		\
 			Commands/Commands.cpp	\
 			Client/Client.cpp		\
 			Res/Response.cpp		\
