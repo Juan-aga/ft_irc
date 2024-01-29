@@ -66,3 +66,8 @@ std::string getTime();
  * @return false if the message wasn't added
  */
 bool addFileLog(std::string message, std::string color);
+/**
+ * @brief init the signals for control + c to close the server
+ * 
+ */
+void ft_init_signals(void);

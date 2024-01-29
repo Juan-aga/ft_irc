@@ -17,7 +17,7 @@ class Server
 		int 		_port;
         int         _socket_fd;
 		Commands	_commands;
-		bool		_running;
+		static bool		_running;
 
 	public:
 		static int	numClients;
@@ -42,7 +42,7 @@ class Server
 		void newClient(std::vector<struct pollfd> &pollfds);
 		Channel *	getChannelByName( std::string const & name );
 		Client *	getClientByNick( std::string const & nick );
-		void	stopServer( void );
+		static void	stopServer( void );
 };
 
 std::ostream &	operator<<(std::ostream & o, Server const & server);
