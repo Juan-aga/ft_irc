@@ -108,15 +108,15 @@ void Response::Send(){
 		std::cout << "From response: " << message;
 }
 
-void Response::Broadcast(std::map<Client *, std::string> clients, bool self) {
-	std::map<Client *, std::string>::iterator it;
+void Response::Broadcast(std::vector<Client *> clients, bool self) {
+	std::vector<Client *>::iterator it;
 	for (it = clients.begin(); it != clients.end(); it++)
 	{
-		if (!self && it->first->nick == this->from)
+		if (!self && (*it)->nick == this->from)
 		{
 			continue;
 		}
 
-		this->To(*(it->first)).Send();
+		this->To(*(*it)).Send();
 	}
 }
