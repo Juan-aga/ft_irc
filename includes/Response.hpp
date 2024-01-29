@@ -18,7 +18,12 @@ enum	Code
 	RPL_NAMREPLY = 353,
 	RPL_ENDOFNAMES = 366,
 	ERR_HOST = 396,
-	ERR_NICKNAMEINUSE = 433
+	ERR_NONICKNAMEGIVEN = 431,
+	ERR_ERRONEUSNICKNAME = 432, 
+	ERR_NICKNAMEINUSE = 433,
+	ERR_NEEDMOREPARAMS = 461,
+	ERR_ALREADYREGISTERED = 462,
+	ERR_PASSWDMISMATCH = 464
 };
 
 // the trailer is the post colon (:) message
@@ -54,7 +59,7 @@ class Response
 		Response &	Command( const std::string & command );
 		Response& Trailer(const std::string &trailer);
 		void Send();
-		void Broadcast(std::map<Client *, std::string> clients, bool self);
+		void Broadcast(std::vector<Client *> clients, bool self);
 
 		//we need to implement a broadcast to al clients in a channel, when channel class has been implemented.
 		//it could be a To channel.

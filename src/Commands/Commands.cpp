@@ -53,7 +53,7 @@ bool    Commands::checkLogin( Client & client, Server const & server )
     return true;
 }
 
-bool    Commands::processInput( const std::string & input, Client & client, Server & server )
+void    Commands::processInput( const std::string & input, Client & client, Server & server )
 {
     std::string::size_type endLine, space, startLine;
     endLine = input.find("\n");
@@ -80,19 +80,17 @@ bool    Commands::processInput( const std::string & input, Client & client, Serv
             //send failed to connect, but every single command send his message.
             if (DEBUG)
             	std::cout << "Client: " << client.nick << " failed to connect from FD: " << client.fd << std::endl;
-            return false;
         }
     }
-    return true;
 }
 
-bool        Commands::execCmd( const std::string & command, const std::string & argument, Client & client, Server & server )
+void    Commands::execCmd( const std::string & command, const std::string & parameter, Client & client, Server & server )
 {
     _CMD    cmd;
 
     cmd = strToCmd(command);
     if (cmd == MAX_CMD)
-        std::cout << "Command " << command << " not found.\nArguments: " << argument << std::endl;
+        std::cout << "Command " << command << " not found.\nArguments: " << parameter << std::endl;
     else if (client.status == DISCONECT)
     	std::cout << "Client was desconnected from the server.\n";
     else if ((client.status == UNKNOWN && cmd > CAP) || (client.status == AUTH && cmd >= JOIN))
@@ -102,129 +100,132 @@ bool        Commands::execCmd( const std::string & command, const std::string & 
      	std::cout << "Not authorized to execute " << command << std::endl;
     }
     else
-        return commands[cmd].exec(argument, client, server);
-    return false;
+        commands[cmd].exec(parameter, client, server);
 }
 
 //All commands of the server.
 
-bool        Commands::execCap( const std::string & argument, Client & client, Server & server )
+void        Commands::execCap( const std::string & parameter, Client & client, Server & server )
 {
-    (void)argument;
+    (void)parameter;
     (void)client;
     (void)server;
     //we don't handle 
     if (DEBUG)
     	std::cout << "Processing CAP\n";
-    return true;
 }
 
 //if PASS fails, we have to send the response and close conection.
-bool        Commands::execPass( const std::string & argument, Client & client, Server & server )
+void        Commands::execPass( const std::string & parameter, Client & client, Server & server )
 {
-    if (argument == server.getPassword())
+	if (parameter.empty())
+		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(client).Command("PASS").Trailer("Not enough parameters").Send();
+	else if (client.status >= CONNECTED)
+  		Response::createReply(ERR_ALREADYREGISTERED).From(server).To(client).Trailer("You may not reregister").Send();
+	else if (parameter == server.getPassword())
     {
     	if (DEBUG)
         	std::cout << "Pass is ok.\n";
         client.status = AUTH;
-        return true;
     }
     else
     {
-        // we have to implement the response to the client.
-        if (DEBUG)
-        	std::cout << "Wrong pass: " << server.getPassword() << std::endl;
-        // if pass fail send ERR_PASSWDMISMATCH (464) and close conection.
+    	Response::createReply(ERR_PASSWDMISMATCH).From(server).To(client).Trailer("Password incorrect").Send();
         client.status = DISCONECT;
-        return false;
     }
 }
 
-bool Commands::execNick( const std::string & argument, Client & client, Server & server )
+void Commands::execNick( const std::string & parameter, Client & client, Server & server )
 {
     Client * check;
-
-    check = server.getClientByNick(argument);
-    if (check)
-        Response::createReply(ERR_NICKNAMEINUSE).From(server).To(client).Command(argument).Trailer("Nickname is already in use").Send();
+    
+    if (parameter.empty())
+    	Response::createReply(ERR_NONICKNAMEGIVEN).From(server).To(client).Trailer("No nickname given").Send();
+    else if (!parseNick(parameter))
+     	Response::createReply(ERR_ERRONEUSNICKNAME).From(server).To(client).Command(parameter).Trailer("Erroneus nickname").Send();
     else
-	{
-        // we need to propagate the change to the channels.
-		if (DEBUG)	
-        	std::cout << "Client: " << client.fd << " changed Nick from: " << client.nick << " to: " << argument << std::endl;
-         client.nick = argument;
-         return true;
+    {
+    	check = server.getClientByNick(parameter);
+     	if (check)
+            Response::createReply(ERR_NICKNAMEINUSE).From(server).To(client).Command(parameter).Trailer("Nickname is already in use").Send();
+        else
+        {
+            // we need to propagate the change to the channels.
+            if (DEBUG)	
+                std::cout << "Client: " << client.fd << " changed Nick from: " << client.nick << " to: " << parameter << std::endl;
+            client.nick = parameter;
+        }
 	}
-    return false;
 }
 
-bool Commands::execUser( const std::string & argument, Client & client, Server & server )
+void Commands::execUser( const std::string & parameter, Client & client, Server & server )
 {
     // we have to implement to take the host. If it's * let it empty, it's catched later.
-    (void)server;
     std::string::size_type space, colon;
     
-    space = argument.find(" ");
-    colon = argument.find(":");
-    if (space == std::string::npos || colon == std::string::npos)
-    {
-        //error on user get user o realname.
-        //check if we haver to send a reply
-        std::cout << "Error parsing user or realname.\n";
-        return false;
-    }
+    space = parameter.find(" ");
+    colon = parameter.find(":");
+    if (parameter.empty())
+  		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(client).Command("USER").Trailer("Not enough parameters").Send();
+    else if (client.status >= CONNECTED)
+    	Response::createReply(ERR_ALREADYREGISTERED).From(server).To(client).Trailer("You may not reregister").Send();
     else
     {
-        client.user = argument.substr(0, space);
-        client.realName = argument.substr(colon + 1, argument.size());
-        //changed user and realname.
-        // host???
+    	if (space == std::string::npos)
+     		client.user = client.nick;
+       	else
+        	client.user = parameter.substr(0, space);
+        if (colon == std::string::npos)
+        	client.realName = client.nick;
+        else
+        	client.realName = parameter.substr(colon + 1, parameter.size());
         if (DEBUG)
         	std::cout << "User: " << client.user << " Realname: " << client.realName << std::endl;
     }
-    return true;
 }
 
-bool        Commands::execJoin( const std::string & argument, Client & client, Server & server )
+void        Commands::execJoin( const std::string & parameter, Client & client, Server & server )
 {
     Channel *   channel;
-
-    channel = server.getChannelByName(argument);
-    if (channel)
+    
+    channel = server.getChannelByName(parameter);
+    if (parameter[0] != '#')
+    {
+    	std::cout << parameter << "is not a valid channel name" << std::endl;
+    	//if channel's name is not valid send a respionse	
+    }
+    else if (channel)
     {
         if (channel->isClient(client.nick))
         {
             std::cout << "Client " << client.nick << " is already a member of " << channel->name << std::endl;
-            return false;
         }
         //we have to check permmisions
         else
             channel->addClient(&client, server);
     }
     else
-        server.channels[Channel::totalCount] = new Channel(argument, & client, server);
-    return true;
+        server.channels.push_back(new Channel(parameter, & client, server));
 }
 
-bool    Commands::execPrivmsg( const std::string & argument, Client & client, Server & server )
+void    Commands::execPrivmsg( const std::string & parameter, Client & client, Server & server )
 {
     std::string to, msg;
     std::string::size_type space, colon;
 
     //maybe we have to do a function for this if there are another commands that need it.
-    space = argument.find(" ");
-    colon = argument.find(":");
+    space = parameter.find(" ");
+    colon = parameter.find(":");
     if (space == std::string::npos || colon == std::string::npos)
     {
         std::cout << "Error parsing PRIVMSG.\n";
-        return false;
     }
     else
     {
         Channel *   channel;
         
-        to = argument.substr(0, space);
-        msg = argument.substr(colon + 1, argument.size());
+        to = parameter.substr(0, space);
+        msg = parameter.substr(colon + 1, parameter.size());
         channel = server.getChannelByName(to);
 
         if (channel)
@@ -235,7 +236,6 @@ bool    Commands::execPrivmsg( const std::string & argument, Client & client, Se
             {
                 //the client is not on the channel
                 std::cout << client.nick << " is not in " << channel->name << " can't send messages.\n";
-                return false;
             }
         }
         //check if is a client. it will be better wen implemented the checker for valid names for nick and channels
@@ -252,19 +252,31 @@ bool    Commands::execPrivmsg( const std::string & argument, Client & client, Se
                 //the client don't exist
                 // check if we have to send a RPL
                 std::cout << to << " client don't exist.\n";
-                return false;
             }
         }
-        return true;
     }
 }
 
-bool Commands::execKill( const std::string & argument, Client & client, Server & server )
+void Commands::execKill( const std::string & parameter, Client & client, Server & server )
 {
-    (void)argument;
+    (void)parameter;
 
     server.stopServer();
 
     std::cout << "Stopping server from: " << client.nick << std::endl;
-    return true;
+}
+
+bool Commands::parseNick( const std::string & parameter)
+{
+	// check leading chaaracters first
+	if (parameter[0] == '#'  || parameter[0] == ':')
+		return false;
+	// check if there is an ascii space <' '>	
+	for (int i = 0; i < int(parameter.size()); i++)
+	{
+		if (parameter[i] == ' ')
+			return false;
+	}
+	
+	return true;
 }
