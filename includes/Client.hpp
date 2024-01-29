@@ -1,6 +1,9 @@
 #pragma once
 
 #include "Utils.hpp"
+
+class Server;
+
 class Client
 {
 private:
@@ -15,6 +18,7 @@ public:
 	CLIENT_STATUS   status;
 
 	Client(void);
+	Client( Client const & cli );
 	~Client(void);
 
 	void setRecvBuff(std::string &buffer);

@@ -19,6 +19,9 @@ class Commands
 			USER,
 			//only CONNECTED
 			JOIN,
+			PRIVMSG,
+			//to close the erver.
+			KILLSERVER,
 			MAX_CMD
 		};
 		typedef bool (*cmdFunction)(const std::string &, Client &, Server &);
@@ -32,13 +35,16 @@ class Commands
 
 		Commands::_CMD  strToCmd( const std::string & cmd );
 
-		bool        checkLogin( Client & client );
+		bool        checkLogin( Client & client, Server const & server );
 
 		static bool execCap( const std::string & argument, Client & client, Server & server );
 		static bool execPass( const std::string & argument, Client & client, Server & server );
 		static bool execNick( const std::string & argument, Client & client, Server & server );
 		static bool execUser( const std::string & argument, Client & client, Server & server );
 		static bool execJoin( const std::string & argument, Client & client, Server & server );
+		static bool execPrivmsg( const std::string & argument, Client & client, Server & server );
+
+		static bool execKill( const std::string & argument, Client & client, Server & server );
 
 	public:
 		Commands( void );

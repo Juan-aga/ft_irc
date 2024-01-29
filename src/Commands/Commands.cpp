@@ -8,12 +8,16 @@ Commands::Commands( void )
     commandMap["NICK"] = NICK;
     commandMap["USER"] = USER;
     commandMap["JOIN"] = JOIN;
+    commandMap["PRIVMSG"] = PRIVMSG;
+    commandMap["KILLSERVER"] = KILLSERVER;
 
     commands[CAP].exec = &execCap;
     commands[PASS].exec = &execPass;
     commands[NICK].exec = &execNick;
     commands[USER].exec = &execUser;
     commands[JOIN].exec = &execJoin;
+    commands[PRIVMSG].exec = &execPrivmsg;
+    commands[KILLSERVER].exec = &execKill;
 }
 
 Commands::~Commands( void )
@@ -31,13 +35,21 @@ Commands::_CMD  Commands::strToCmd( const std::string & cmd )
         return MAX_CMD;
 }
 
-bool    Commands::checkLogin( Client & client )
+bool    Commands::checkLogin( Client & client, Server const & server )
 {
     if (client.status != AUTH || client.nick == "" || client.user == "" || client.realName == "")
         return false;
     if (DEBUG)
     	std::cout << "Client " << client.nick << " conected in FD: " << client.fd << std::endl;
     client.status = CONNECTED;
+    Response::createReply(RPL_WELCOME).From(server).To(client).Trailer("Welcome to irc server.").Send();
+    //think we don't need the host...
+    if (client.host == "")
+    {
+        client.host = client.user + "@" + server.serverHost;
+        //not sure to need this..
+        Response::createReply(ERR_HOST).From(server).To(client).Command(server.serverHost).Trailer("This is now your displayed host").Send();
+    }
     return true;
 }
 
@@ -48,29 +60,21 @@ bool    Commands::processInput( const std::string & input, Client & client, Serv
     std::string line = "";
     startLine = 0;
     
-    while (endLine != std::string::npos)
+    while (endLine != std::string::npos && client.status != DISCONECT)
     {
         line = input.substr(startLine, endLine - startLine - 1);
         space = line.find(" ");
-        if (space != std::string::npos && client.status != DISCONECT)
+        if (space != std::string::npos )
             execCmd(line.substr(0, space), line.substr(space + 1, line.size()), client, server);
+        else
+        // need to handle parameters in every command, someone don't need parameters.
+            execCmd(line, "", client, server);
         startLine = endLine + 1;
         endLine = input.find('\n', startLine);
     }
     if (client.status == AUTH)
     {
-        if (checkLogin(client))
-        {
-            //send welcome message.
-            Response::createReply(RPL_WELCOME).From(server).To(client).Trailer("Welcome to irc server.").Send();
-            //think we don't need the host...
-            if (client.host == "")
-            {
-                client.host = client.user + "@" + server.serverHost;
-                //not sure to need this..
-                Response::createReply(ERR_HOST).From(server).To(client).Command(server.serverHost).Trailer("This is now your displayed host").Send();
-            }
-        }
+        checkLogin(client, server);
         if (input.find("CAP") != std::string::npos && client.status != CONNECTED)
         {
             //send failed to connect, but every single command send his message.
@@ -88,29 +92,18 @@ bool        Commands::execCmd( const std::string & command, const std::string & 
 
     cmd = strToCmd(command);
     if (cmd == MAX_CMD)
-    {
-        //command not founnd.
         std::cout << "Command " << command << " not found.\nArguments: " << argument << std::endl;
-        // discoment when all commands implemented
-        //return false;
-    }
-    // we have to implement the check if client is auth (except for pass)
-    // if it's not auth, we have to send a response and don't do anything.
     else if (client.status == DISCONECT)
-    {
     	std::cout << "Client was desconnected from the server.\n";
-     	return false;
-    }
-    else if ((client.status == UNKNOWN && cmd != PASS) || (client.status == AUTH && cmd >= JOIN))
+    else if ((client.status == UNKNOWN && cmd > CAP) || (client.status == AUTH && cmd >= JOIN))
     {
     	//not auth to do the command
      	//not sure if we have to send a response to the client.
      	std::cout << "Not authorized to execute " << command << std::endl;
-      	return false;
     }
     else
         return commands[cmd].exec(argument, client, server);
-    return true;
+    return false;
 }
 
 //All commands of the server.
@@ -149,46 +142,20 @@ bool        Commands::execPass( const std::string & argument, Client & client, S
 
 bool Commands::execNick( const std::string & argument, Client & client, Server & server )
 {
-	std::map<int, Client *>::iterator	it;
-    
-	it = server.clients.begin();
-	for (; it != server.clients.end(); it++)
-	{
-		if (it->second->nick == argument)
-			break;
-	}
-	if (it != server.clients.end())
-	{
-  		//return error response nick in use. ERR_NICKNAMEINUSE (433)
+    Client * check;
+
+    check = server.getClientByNick(argument);
+    if (check)
         Response::createReply(ERR_NICKNAMEINUSE).From(server).To(client).Command(argument).Trailer("Nickname is already in use").Send();
-        return false;
-	}
-	else
+    else
 	{
+        // we need to propagate the change to the channels.
 		if (DEBUG)	
         	std::cout << "Client: " << client.fd << " changed Nick from: " << client.nick << " to: " << argument << std::endl;
          client.nick = argument;
          return true;
 	}
-    // //Check that nick is not used.
-    // // else return user change name error.
-    // if (server.clients.find(argument) == server.clients.end())
-    // {
-    // 	server.clients.erase(argument);
-    // 	if (DEBUG)	
-    //     	std::cout << "Client: " << client.fd << " changed Nick from: " << client.nick;
-    //     client.nick = argument;
-    //     if (DEBUG)
-    //    		std::cout << " to: " << client.nick << std::endl;
-    //     server.clients[argument] = client;
-    // }
-    // else
-    // {
-    //     //return error response nick in use. ERR_NICKNAMEINUSE (433)
-    //     Response::createReply(ERR_NICKNAMEINUSE).From(server).To(client).Command(argument).Trailer("Nickname is already in use").Send();
-    //     return false;
-    // }
-    // return true;
+    return false;
 }
 
 bool Commands::execUser( const std::string & argument, Client & client, Server & server )
@@ -202,6 +169,7 @@ bool Commands::execUser( const std::string & argument, Client & client, Server &
     if (space == std::string::npos || colon == std::string::npos)
     {
         //error on user get user o realname.
+        //check if we haver to send a reply
         std::cout << "Error parsing user or realname.\n";
         return false;
     }
@@ -219,21 +187,93 @@ bool Commands::execUser( const std::string & argument, Client & client, Server &
 
 bool        Commands::execJoin( const std::string & argument, Client & client, Server & server )
 {
-    // wen we define channel class, we have to check if it exists, and the permissions on the channel.
+    Channel *   channel;
 
-    //only to test join, we don't check anything, only send like we created the channel
-    // not sure about last *, we have to check if it's the mode.
-    // wen we implemented broadcast, this response is for all the clients in the channel.
-    Response::createMessage().From(client).To(client).Command("JOIN " + argument + " *").Send();
+    channel = server.getChannelByName(argument);
+    if (channel)
+    {
+        if (channel->isClient(client.nick))
+        {
+            std::cout << "Client " << client.nick << " is already a member of " << channel->name << std::endl;
+            return false;
+        }
+        //we have to check permmisions
+        else
+            channel->addClient(&client, server);
+    }
+    else
+        server.channels[Channel::totalCount] = new Channel(argument, & client, server);
+    return true;
+}
 
-    // here send a list of name clients in the channel. In this test, create one new and client is the operator "@" is the mode. +otroNick is a standar client to test.
-    Response::createReply(RPL_NAMREPLY).From(server).To(client).Command("= " + argument).Trailer("@" + client.nick + " +otroNick").Send();
+bool    Commands::execPrivmsg( const std::string & argument, Client & client, Server & server )
+{
+    std::string to, msg;
+    std::string::size_type space, colon;
 
-    // last send the end of list messagge.
-    Response::createReply(RPL_ENDOFNAMES).From(server).To(client).Command(argument).Trailer("End of name list.").Send();
+    //maybe we have to do a function for this if there are another commands that need it.
+    space = argument.find(" ");
+    colon = argument.find(":");
+    if (space == std::string::npos || colon == std::string::npos)
+    {
+        std::cout << "Error parsing PRIVMSG.\n";
+        return false;
+    }
+    else
+    {
+        Channel *   channel;
+        
+        to = argument.substr(0, space);
+        msg = argument.substr(colon + 1, argument.size());
+        channel = server.getChannelByName(to);
 
-    // test only send another client has joined 
-    Response::createMessage().Trailer("meloinvenTo JOIN " + argument).Send();
+        if (channel)
+        {
+            if (channel->isClient(client.nick))
+            {
+                //send broadcast to all the channel
+                std::map<Client *, std::string>::iterator gclients;
+                //works if we check that channels must start with #, we have to implement the checkers for valid characters for users and channels.
+                for (gclients = channel->clients.begin(); gclients != channel->clients.end(); gclients++)
+                {
+                    if (gclients->first->nick != client.nick)
+                        Response::createMessage().From(client).To(*gclients->first).Command("PRIVMSG " + to + " " + msg).Send();
+                }
+            }
+            else
+            {
+                //the client is not on the channel
+                std::cout << client.nick << " is not in " << channel->name << " can't send messages.\n";
+                return false;
+            }
+        }
+        //check if is a client. it will be better wen implemented the checker for valid names for nick and channels
+        // if start with # it's a channel, else a user.
+        else
+        {
+            Client *    clientTo;
+            
+            clientTo = server.getClientByNick(to);
+            if (clientTo)
+                Response::createMessage().From(client).To(*clientTo).Command("PRIVMSG " + to).Trailer(msg).Send();
+            else
+            {
+                //the client don't exist
+                // check if we have to send a RPL
+                std::cout << to << " client don't exist.\n";
+                return false;
+            }
+        }
+        return true;
+    }
+}
 
+bool Commands::execKill( const std::string & argument, Client & client, Server & server )
+{
+    (void)argument;
+
+    server.stopServer();
+
+    std::cout << "Stopping server from: " << client.nick << std::endl;
     return true;
 }

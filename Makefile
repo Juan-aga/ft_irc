@@ -23,6 +23,7 @@ CPPFILES = 	main.cpp 				\
 			Commands/Commands.cpp	\
 			Client/Client.cpp		\
 			Res/Response.cpp		\
+			Channel.cpp
 
 SRCS = ${addprefix $(SRC_DIR), $(CPPFILES)}
 OBJECTS = ${patsubst $(SRC_DIR)%.cpp, $(OBJ_DIR)%.opp, $(SRCS)}
@@ -33,10 +34,12 @@ HEADERS = 	includes/Server.hpp 	\
 			includes/Commands.hpp	\
 			includes/Client.hpp		\
 			includes/Response.hpp	\
+			includes/Channel.hpp
 
 INCLUDES =	-I ./includes
 
 ifdef DEBUG
+	CFLAGS += -g
 	DEBUG	=	1
 else
 	DEBUG	=	0
