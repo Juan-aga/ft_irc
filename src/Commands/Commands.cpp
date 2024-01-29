@@ -143,7 +143,11 @@ bool        Commands::execPass( const std::string & argument, Client & client, S
 bool Commands::execNick( const std::string & argument, Client & client, Server & server )
 {
     Client * check;
-
+    
+    if (argumets )
+    {
+    	//send a response if it is not valid
+    }
     check = server.getClientByNick(argument);
     if (check)
         Response::createReply(ERR_NICKNAMEINUSE).From(server).To(client).Command(argument).Trailer("Nickname is already in use").Send();
@@ -188,7 +192,13 @@ bool Commands::execUser( const std::string & argument, Client & client, Server &
 bool        Commands::execJoin( const std::string & argument, Client & client, Server & server )
 {
     Channel *   channel;
-
+    
+    if (argument[0] != '#')
+    {
+    	std::cout << argument << "is not a valid channel name" << std::endl;
+     	return false;
+    	//if channel's name is not valid send a respionse	
+    }
     channel = server.getChannelByName(argument);
     if (channel)
     {
