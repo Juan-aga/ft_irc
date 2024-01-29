@@ -205,7 +205,7 @@ void        Commands::execJoin( const std::string & parameter, Client & client, 
             channel->addClient(&client, server);
     }
     else
-        server.channels[Channel::totalCount] = new Channel(parameter, & client, server);
+        server.channels.push_back(new Channel(parameter, & client, server));
 }
 
 void    Commands::execPrivmsg( const std::string & parameter, Client & client, Server & server )
