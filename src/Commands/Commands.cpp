@@ -144,21 +144,24 @@ bool        Commands::execPass( const std::string & argument, Client & client, S
 bool Commands::execNick( const std::string & argument, Client & client, Server & server )
 {
     Client * check;
-
+    
     if (argument.empty())
     	Response::createReply(ERR_NONICKNAMEGIVEN).From(server).To(client).Trailer("No nickname given").Send();
-    // else if (argument is invvalid nick)
-    // 	Response::createReply(ERR_ERRONEUSNICKNAME).From(server).To(client).Command(argument).Trailer("Erroneus nickname").Send();
+    else if (!parseNick(argument))
+     	Response::createReply(ERR_ERRONEUSNICKNAME).From(server).To(client).Command(argument).Trailer("Erroneus nickname").Send();
     else
     {
     	check = server.getClientByNick(argument);
      	if (check)
-        Response::createReply(ERR_NICKNAMEINUSE).From(server).To(client).Command(argument).Trailer("Nickname is already in use").Send();
+            Response::createReply(ERR_NICKNAMEINUSE).From(server).To(client).Command(argument).Trailer("Nickname is already in use").Send();
         else
-		if (DEBUG)	
-        	std::cout << "Client: " << client.fd << " changed Nick from: " << client.nick << " to: " << argument << std::endl;
-         client.nick = argument;
-         return true;
+        {
+            // we need to propagate the change to the channels.
+            if (DEBUG)	
+                std::cout << "Client: " << client.fd << " changed Nick from: " << client.nick << " to: " << argument << std::endl;
+            client.nick = argument;
+            return true;
+        }
 	}
     return false;
 }
@@ -195,7 +198,13 @@ bool Commands::execUser( const std::string & argument, Client & client, Server &
 bool        Commands::execJoin( const std::string & argument, Client & client, Server & server )
 {
     Channel *   channel;
-
+    
+    if (argument[0] != '#')
+    {
+    	std::cout << argument << "is not a valid channel name" << std::endl;
+     	return false;
+    	//if channel's name is not valid send a respionse	
+    }
     channel = server.getChannelByName(argument);
     if (channel)
     {
@@ -274,4 +283,19 @@ bool Commands::execKill( const std::string & argument, Client & client, Server &
 
     std::cout << "Stopping server from: " << client.nick << std::endl;
     return true;
+}
+
+bool Commands::parseNick( const std::string & argument)
+{
+	// check leading chaaracters first
+	if (argument[0] == '#'  || argument[0] == ':')
+		return false;
+	// check if there is an ascii space <' '>	
+	for (int i = 0; i < int(argument.size()); i++)
+	{
+		if (argument[i] == ' ')
+			return false;
+	}
+	
+	return true;
 }
