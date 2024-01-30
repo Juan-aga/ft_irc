@@ -22,6 +22,8 @@ class Channel
 		std::vector< Client *>	clients;
 		//std::map< Client * , std::string >	clients;
 		//the chanel must have more options...
+
+		//we need to add topic and RPL_TOPIC (332) when add user.
 		
 		Channel( void );
 		Channel( std::string const & name, Client * client, Server const & server );

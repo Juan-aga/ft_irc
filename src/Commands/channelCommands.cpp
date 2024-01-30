@@ -1,21 +1,39 @@
 #include "Commands.hpp"
 #include "Server.hpp"
 
+//Operators commands:
+//	KICK
+//	INVITE
+//	TOPIC
+//	MODE
+
+//we have to add this channels mode:
+//  Client Limit Channel Mode   +l
+//  Invite-Only Channel Mode    +i
+//  Key Channel Mode            +k
+//  Protected Topic Mode        +t
+
+//clients mode only:
+//  Operator:	prefix @		+o
+//  regular :	prefix +		+v
+
 void        Commands::execJoin( const std::string & parameter, Client & client, Server & server )
 {
 	Channel *   channel;
 	
+    // If parameter is "0", the client leave all channels. execute PART for every channel.
 	channel = server.getChannelByName(parameter);
 	if (parameter[0] != '#')
 	{
+        Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(client).Command("NICK").Trailer("Not enough parameters").Send();
 		addFileLog("[-]Client: " + client.nick + " tried to join an invalid channel: " + parameter, RED_CMD);
-		//if channel's name is not valid send a respionse	
 	}
 	else if (channel)
 	{
 		if (channel->isClient(client.nick))
 			addFileLog("[!]Client: " + client.nick + " is already a member of channel: " + parameter, YELLOW_CMD);
 		//we have to check permmisions
+        // send ERR_INVITEONLYCHAN (473) or ERR_BANNEDFROMCHAN (474)
 		else
 		{
 			addFileLog("[+]Client: " + client.nick + " joined channel: " + parameter, GREEN_CMD);

@@ -9,7 +9,6 @@ void        Commands::execCap( const std::string & parameter, Client & client, S
 	(void)server;
 }
 
-//if PASS fails, we have to send the response and close conection.
 void        Commands::execPass( const std::string & parameter, Client & client, Server & server )
 {
 	if (parameter.empty())
@@ -63,14 +62,14 @@ void Commands::execUser( const std::string & parameter, Client & client, Server 
 	space = parameter.find(" ");
 	colon = parameter.find(":");
 	if (parameter.empty())
-		  Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(client).Command("USER").Trailer("Not enough parameters").Send();
+		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(client).Command("USER").Trailer("Not enough parameters").Send();
 	else if (client.status >= CONNECTED)
 		Response::createReply(ERR_ALREADYREGISTERED).From(server).To(client).Trailer("You may not reregister").Send();
 	else
 	{
 		if (space == std::string::npos)
 			 client.user = client.nick;
-		   else
+		else
 			client.user = parameter.substr(0, space);
 		if (colon == std::string::npos)
 			client.realName = client.nick;
