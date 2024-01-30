@@ -1,8 +1,10 @@
 #pragma once
 
 #include "Utils.hpp"
+#include "Channel.hpp"
 
 class Server;
+class Channel;
 
 class Client
 {
@@ -15,6 +17,9 @@ public:
 	std::string user;
 	std::string realName;
 	std::string host;
+	std::string ip;
+	//maybe we change the string for the enum of modes
+	std::map< Channel *, std::string >	channels;
 	CLIENT_STATUS   status;
 
 	Client(void);

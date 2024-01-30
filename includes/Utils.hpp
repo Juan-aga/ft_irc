@@ -23,6 +23,7 @@
 #include <cerrno>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <signal.h>
 #include <sys/socket.h>
 #include "Messages.hpp"
 // only in linux, to use setw and setfill
