@@ -1,7 +1,5 @@
 #include "Utils.hpp"
 #include "Server.hpp"
-//for linux
-#include <signal.h>
 
 static void	ft_handler_ctrl_c(int sig)
 {
