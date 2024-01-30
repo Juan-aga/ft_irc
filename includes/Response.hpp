@@ -51,8 +51,8 @@ class Response
 		Response();
 		~Response();
 
-		static Response createMessage();
-		static Response createReply(const Code &code);		
+		static Response createMessage(); 	
+		static Response createReply(const Code &code);
 		Response& From(const Client &client);
 		Response& From(const Server & server);	
 		Response& To(const Client & client);
@@ -60,7 +60,8 @@ class Response
 		Response& Trailer(const std::string &trailer);
 		void Send();
 		void Broadcast(std::vector<Client *> clients, bool self);
-
+		//bradcast to all the channels were the cinet is on.
+		void Broadcast(std::map< Channel *, std::string >	channels, bool self);
 		//we need to implement a broadcast to al clients in a channel, when channel class has been implemented.
 		//it could be a To channel.
 };
