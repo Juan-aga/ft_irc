@@ -6,7 +6,7 @@
 /*   By: paescano <paescano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/25 17:21:30 by paescano          #+#    #+#             */
-/*   Updated: 2024/01/26 14:52:48 by paescano         ###   ########.fr       */
+/*   Updated: 2024/01/29 15:44:02 by paescano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,4 +106,17 @@ void Response::Send(){
 	send(this->sentfd, message.c_str(), message.length(), 0);
 	if (DEBUG)
 		std::cout << "From response: " << message;
+}
+
+void Response::Broadcast(std::vector<Client *> clients, bool self) {
+	std::vector<Client *>::iterator it;
+	for (it = clients.begin(); it != clients.end(); it++)
+	{
+		if (!self && (*it)->nick == this->from)
+		{
+			continue;
+		}
+
+		this->To(*(*it)).Send();
+	}
 }

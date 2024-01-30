@@ -2,8 +2,9 @@
 
 int Server::numClients = 0;
 int Server::numChannels = 0;
+bool Server::_running = true;
 
-Server::Server(int port, std::string password): _password(password), _port(port), _running(true) ,serverName("server"), serverHost("test.irc") {}
+Server::Server(int port, std::string password): _password(password), _port(port),serverName("server"), serverHost("test.irc") {}
 
 Server::~Server() {}
 
@@ -137,16 +138,16 @@ void Server::connectClient(void)
 	//here we have to implement a clean close of the server.
 	for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++)
 		delete it->second;
-	for (std::map<int, Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
-		delete it->second;
+	for (std::vector< Channel * >::iterator it = channels.begin(); it != channels.end(); it++)
+		delete *it;
 }
 
 Channel *	Server::getChannelByName( std::string const & name )
 {
-	for (std::map< int, Channel * >::iterator it = channels.begin(); it != channels.end(); it++)
+	for (std::vector< Channel * >::iterator it = channels.begin(); it != channels.end(); it++)
 	{
-		if (it->second->name == name)
-			return it->second;
+		if ((*it)->name == name)
+			return *it;
 	}
 	return NULL;
 }

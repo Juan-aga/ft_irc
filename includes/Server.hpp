@@ -17,7 +17,7 @@ class Server
 		int 		_port;
         int         _socket_fd;
 		Commands	_commands;
-		bool		_running;
+		static bool		_running;
 
 	public:
 		static int	numClients;
@@ -27,7 +27,8 @@ class Server
 		std::string	serverHost;
 		//really need the map? can we use vec<CLient*> ???
 		std::map<int, Client * >	clients;
-		std::map<int, Channel * >	channels;
+		//std::map<int, Channel * >	channels;
+		std::vector<Channel *>	channels;
 
 		Server(int port, std::string password);
 		//Server( Server const & server );
@@ -42,7 +43,7 @@ class Server
 		void newClient(std::vector<struct pollfd> &pollfds);
 		Channel *	getChannelByName( std::string const & name );
 		Client *	getClientByNick( std::string const & nick );
-		void	stopServer( void );
+		static void	stopServer( void );
 };
 
 std::ostream &	operator<<(std::ostream & o, Server const & server);

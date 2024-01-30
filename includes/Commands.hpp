@@ -24,7 +24,7 @@ class Commands
 			KILLSERVER,
 			MAX_CMD
 		};
-		typedef bool (*cmdFunction)(const std::string &, Client &, Server &);
+		typedef void (*cmdFunction)(const std::string &, Client &, Server &);
 		typedef struct s_commands
 		{
 			cmdFunction exec;
@@ -36,21 +36,21 @@ class Commands
 		Commands::_CMD  strToCmd( const std::string & cmd );
 
 		bool        checkLogin( Client & client, Server const & server );
-		static bool	parseNick( const std::string & argument);
+		static bool	parseNick( const std::string & parameter);
 
-		static bool execCap( const std::string & argument, Client & client, Server & server );
-		static bool execPass( const std::string & argument, Client & client, Server & server );
-		static bool execNick( const std::string & argument, Client & client, Server & server );
-		static bool execUser( const std::string & argument, Client & client, Server & server );
-		static bool execJoin( const std::string & argument, Client & client, Server & server );
-		static bool execPrivmsg( const std::string & argument, Client & client, Server & server );
-		static bool execKill( const std::string & argument, Client & client, Server & server );
+		static void execCap( const std::string & parameter, Client & client, Server & server );
+		static void execPass( const std::string & parameter, Client & client, Server & server );
+		static void execNick( const std::string & parameter, Client & client, Server & server );
+		static void execUser( const std::string & parameter, Client & client, Server & server );
+		static void execJoin( const std::string & parameter, Client & client, Server & server );
+		static void execPrivmsg( const std::string & parameter, Client & client, Server & server );
+		static void execKill( const std::string & parameter, Client & client, Server & server );
 		
 	public:
 		Commands( void );
 		~Commands( void );
 
-		bool    processInput( const std::string & input, Client & client, Server & server );
-		bool    execCmd( const std::string & command, const std::string & argument, Client & client, Server & server );
+		void    processInput( const std::string & input, Client & client, Server & server );
+		void    execCmd( const std::string & command, const std::string & parameter, Client & client, Server & server );
 
 };

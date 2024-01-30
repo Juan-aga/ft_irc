@@ -8,6 +8,7 @@
 //#include <map>
 
 class Server;
+class Client;
 
 class Channel
 {
@@ -18,7 +19,8 @@ class Channel
 		static int	totalCount;
 
 		std::string	name;
-		std::map< Client * , std::string >	clients;
+		std::vector< Client *>	clients;
+		//std::map< Client * , std::string >	clients;
 		//the chanel must have more options...
 		
 		Channel( void );
