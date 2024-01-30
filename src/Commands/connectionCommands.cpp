@@ -47,9 +47,10 @@ void Commands::execNick( const std::string & parameter, Client & client, Server 
 			Response::createReply(ERR_NICKNAMEINUSE).From(server).To(client).Command(parameter).Trailer("Nickname is already in use").Send();
 		else
 		{
-			// we need to propagate the change to the channels.
-			if (DEBUG)	
-				std::cout << "Client: " << client.fd << " changed Nick from: " << client.nick << " to: " << parameter << std::endl;
+            if (client.channels.size())
+			    Response::createMessage().From(client).Command("NICK " + parameter).Broadcast(client.channels, true);
+            else
+                Response::createMessage().From(client).To(client).Command("NICK " + parameter).Send();
 			client.nick = parameter;
 		}
 	}
