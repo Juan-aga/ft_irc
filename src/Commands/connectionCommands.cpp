@@ -3,12 +3,10 @@
 
 void        Commands::execCap( const std::string & parameter, Client & client, Server & server )
 {
+	//we don't handle 
 	(void)parameter;
 	(void)client;
 	(void)server;
-	//we don't handle 
-	if (DEBUG)
-		std::cout << "Processing CAP\n";
 }
 
 //if PASS fails, we have to send the response and close conection.
@@ -25,11 +23,7 @@ void        Commands::execPass( const std::string & parameter, Client & client, 
 		addFileLog("[-]Client from ip: " + client.ip + " failed to connect (You may not reregister).", RED_CMD);
 	}
 	else if (parameter == server.getPassword())
-	{
-		if (DEBUG)
-			std::cout << "Pass is ok.\n";
 		client.status = AUTH;
-	}
 	else
 	{
 		Response::createReply(ERR_PASSWDMISMATCH).From(server).To(client).Trailer("Password incorrect").Send();
@@ -45,11 +39,11 @@ void Commands::execNick( const std::string & parameter, Client & client, Server 
 	if (parameter.empty())
 		Response::createReply(ERR_NONICKNAMEGIVEN).From(server).To(client).Trailer("No nickname given").Send();
 	else if (!parseNick(parameter))
-		 Response::createReply(ERR_ERRONEUSNICKNAME).From(server).To(client).Command(parameter).Trailer("Erroneus nickname").Send();
+		Response::createReply(ERR_ERRONEUSNICKNAME).From(server).To(client).Command(parameter).Trailer("Erroneus nickname").Send();
 	else
 	{
 		check = server.getClientByNick(parameter);
-		 if (check)
+		if (check)
 			Response::createReply(ERR_NICKNAMEINUSE).From(server).To(client).Command(parameter).Trailer("Nickname is already in use").Send();
 		else
 		{
@@ -63,7 +57,6 @@ void Commands::execNick( const std::string & parameter, Client & client, Server 
 
 void Commands::execUser( const std::string & parameter, Client & client, Server & server )
 {
-	// we have to implement to take the host. If it's * let it empty, it's catched later.
 	std::string::size_type space, colon;
 	
 	space = parameter.find(" ");
