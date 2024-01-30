@@ -142,7 +142,9 @@ void Commands::execNick( const std::string & parameter, Client & client, Server 
     if (parameter.empty())
     	Response::createReply(ERR_NONICKNAMEGIVEN).From(server).To(client).Trailer("No nickname given").Send();
     else if (!parseNick(parameter))
+    {
      	Response::createReply(ERR_ERRONEUSNICKNAME).From(server).To(client).Command(parameter).Trailer("Erroneus nickname").Send();
+    }
     else
     {
     	check = server.getClientByNick(parameter);
