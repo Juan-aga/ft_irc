@@ -159,6 +159,7 @@ bool Commands::execNick( const std::string & argument, Client & client, Server &
 		if (DEBUG)	
         	std::cout << "Client: " << client.fd << " changed Nick from: " << client.nick << " to: " << argument << std::endl;
          client.nick = argument;
+         
          return true;
 	}
     return false;
