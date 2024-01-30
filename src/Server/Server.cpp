@@ -92,7 +92,7 @@ void Server::readMesage(Client * client)
 		readBuffer.append(buffer);
 		if (readBuffer.find("\r\n"))
 		{
-			std::cout << "Readed: " << readBuffer << std::endl;
+			//std::cout << "Readed: " << readBuffer << std::endl;
 			break;
 		}
 	}
@@ -101,20 +101,24 @@ void Server::readMesage(Client * client)
 
 void Server::newClient(std::vector<struct pollfd>& pollfds)
 {
-    sockaddr_in clientAddress;
-    socklen_t addrlen = sizeof(clientAddress);
+	sockaddr_in clientAddress;
+	socklen_t addrlen = sizeof(clientAddress);
 	int					clientFd;
 
-    clientFd = accept(this->_socket_fd, (sockaddr *)&clientAddress, &addrlen);
+	clientFd = accept(this->_socket_fd, (sockaddr *)&clientAddress, &addrlen);
 
-    if (clientFd != -1)
-    {
-        fcntl(clientFd, F_SETFL, O_NONBLOCK);
-        pollfds.push_back((struct pollfd){clientFd, POLLIN | POLLOUT, 0});
-        Client		*client = new Client;
-        client->fd = clientFd;
-        clients[client->fd] = client;
-    }
+	if (clientFd != -1)
+	{
+		fcntl(clientFd, F_SETFL, O_NONBLOCK);
+		pollfds.push_back((struct pollfd){clientFd, POLLIN | POLLOUT, 0});
+		Client		*client = new Client;
+		// check this in case of segfault
+		struct in_addr inetAddress;
+		inetAddress.s_addr = clientAddress.sin_addr.s_addr;
+		client->ip = inet_ntoa(inetAddress);
+		client->fd = clientFd;
+		clients[client->fd] = client;
+	}
 }
 
 void Server::connectClient(void)
@@ -140,6 +144,7 @@ void Server::connectClient(void)
 		delete it->second;
 	for (std::vector< Channel * >::iterator it = channels.begin(); it != channels.end(); it++)
 		delete *it;
+	addFileLog("[+]Server closed.", GREEN_CMD);
 }
 
 Channel *	Server::getChannelByName( std::string const & name )
