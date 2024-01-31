@@ -82,10 +82,10 @@ void    Commands::execCmd( const std::string & command, const std::string & para
 
 	cmd = strToCmd(command);
 	if (cmd == MAX_CMD)
-		addFileLog("[-]Command " + command + " not found. Arguments: " + parameter, RED_CMD);
+		addFileLog("[-]Command: " + command + " not found. Arguments: " + parameter, RED_CMD);
 	else if (client.status == DISCONECT)
 	//this is not "failed to connect", it was disconnected by the server.
-		addFileLog("[-]Client from ip: " + client.ip + " failed to connect (Disconnected).", RED_CMD);
+		addFileLog("[!]Client from ip: " + client.ip + " disconnected by the server", YELLOW_CMD);
 	else if ((client.status == UNKNOWN && cmd > CAP) || (client.status == AUTH && cmd >= JOIN))
 	{
 		//not auth to do the command
@@ -94,9 +94,13 @@ void    Commands::execCmd( const std::string & command, const std::string & para
 	}
 	else
 	{
-		//here we log all the commands, if we want privacity from prvmsg,
-		//we have to do this when cmd != PRIVMSG
-		addFileLog("[+]Command: " + command + " from: " + client.nick + " Arguments {" + parameter + "} Executed.", GREEN_CMD);
+		if (command != "PRIVMSG" && command != "PASS" && command != "CAP")
+		{
+			if(client.nick != "")
+				addFileLog("[!]Client: " + client.nick + " from: " + client.ip + " Command: " + command + " Arguments: " + parameter, YELLOW_CMD);
+			else
+				addFileLog("[!]Client: " + client.ip + " Command: " + command + " Arguments: " + parameter, YELLOW_CMD);
+		}
 		commands[cmd].exec(parameter, client, server);
 	}
 }
