@@ -13,11 +13,12 @@ Channel::Channel( std::string const & name, Client * client, Server const & serv
 {
     std::string msg;
 
-	clients[client] = "@";
+	client->channels[this] = "@";
+	clients.push_back(client);
 	Server::numChannels += 1;
 	totalCount += 1;
 	msg = getNamereply();
-	Response::createMessage().From(*client).To(*client).Command("JOIN " + name + " " + clients[client]).Send();
+	Response::createMessage().From(*client).To(*client).Command("JOIN " + name + " " + client->channels[this]).Send();
     Response::createReply(RPL_NAMREPLY).From(server).To(*client).Command("= " + name).Trailer(msg).Send();
     Response::createReply(RPL_ENDOFNAMES).From(server).To(*client).Command(name).Trailer("End of name list.").Send();
 }
@@ -31,11 +32,11 @@ bool	Channel::addClient( Client * client, Server const & server )
 {
     std::string msg;
 
-	/// we need to view channels mode. to test "+"
-	clients[client] = "+";
+	client->channels[this] = "+";
+	clients.push_back(client);
 	_numClients += 1;
 	msg = getNamereply();
-	Response::createMessage().From(*client).Command("JOIN " + name + " " + clients[client]).Broadcast(clients, true);
+	Response::createMessage().From(*client).Command("JOIN " + name + " " + client->channels[this]).Broadcast(clients, true);
     Response::createReply(RPL_NAMREPLY).From(server).To(*client).Command("= " + name).Trailer(msg).Send();
     Response::createReply(RPL_ENDOFNAMES).From(server).To(*client).Command(name).Trailer("End of name list.").Send();
 	return true;
@@ -44,7 +45,16 @@ bool	Channel::addClient( Client * client, Server const & server )
 bool	Channel::delClient( Client * client, Server const & server )
 {
 	(void)server;
-	clients.erase(client);
+
+	client->channels.erase(this);
+	for (std::vector< Client *>::iterator it = clients.begin(); it != clients.end(); it++)
+	{
+		if (*it == client)
+		{
+			clients.erase(it);
+			break;
+		}
+	}
 	if (--_numClients <= 0)
 	{}//we need to delete this channel.. maybe create a function on the server?
 	// server need to broadcast that the client was quit.
@@ -55,23 +65,20 @@ bool	Channel::isClient( std::string const & nick)
 {
 	std::map< Client*, std::string >::iterator	it;
 
-	it = this->clients.begin();
-	for (; it != this->clients.end(); it++)
+	for (std::vector< Client *>::iterator it = clients.begin(); it != clients.end(); it++)
 	{
-		if (it->first->nick == nick)
-			break;
+		if ((*it)->nick == nick)
+			return true;
 	}
-	if (it != this->clients.end())
-		return true;
-	else
-		return false;
+	return false;
 }
 
 std::string							Channel::getNamereply( void )
 {
 	std:: string	msg = "";
 
-	for (std::map<Client *, std::string>::iterator gclients = clients.begin(); gclients != clients.end(); gclients++)
-		msg += gclients->second + gclients->first->nick + " ";
+	// we have to show the clients depending on this modes. We need to apply fiters.
+	for (std::vector< Client *>::iterator gclients = clients.begin(); gclients != clients.end(); gclients++)
+		msg += (*gclients)->channels[this] + (*gclients)->nick + " ";
 	return msg;
 }
