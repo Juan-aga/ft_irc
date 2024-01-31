@@ -15,15 +15,17 @@ X = \033[0m
 SRC_DIR = src/
 OBJ_DIR = obj/
 
-CPPFILES = 	main.cpp 				\
-			Server/Server.cpp 		\
-			Utils/checkArgs.cpp 	\
-			Utils/addFileLog.cpp	\
-			Utils/getTime.cpp		\
-			Utils/signals.cpp		\
-			Commands/Commands.cpp	\
-			Client/Client.cpp		\
-			Res/Response.cpp		\
+CPPFILES = 	main.cpp 						\
+			Server/Server.cpp 				\
+			Utils/checkArgs.cpp 			\
+			Utils/addFileLog.cpp			\
+			Utils/getTime.cpp				\
+			Utils/signals.cpp				\
+			Commands/Commands.cpp			\
+			Commands/connectionCommands.cpp	\
+			Commands/channelCommands.cpp	\
+			Client/Client.cpp				\
+			Res/Response.cpp				\
 			Channel.cpp
 
 SRCS = ${addprefix $(SRC_DIR), $(CPPFILES)}
