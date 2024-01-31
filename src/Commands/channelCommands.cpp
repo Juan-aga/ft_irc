@@ -95,3 +95,48 @@ void    Commands::execPrivmsg( const std::string & parameter, Client & client, S
 		}
 	}
 }
+
+void	Commands::execTopic( const std::string & parameter, Client & client, Server & server )
+{
+	//Channel *   channel;
+	
+	if (parameter[0] != '#')
+	{
+        Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(client).Command("NICK").Trailer("invalid channel to change topic").Send();
+		addFileLog("[-]Client: " + client.nick + " tried to changed a topic on invalid channel: " + parameter, RED_CMD);
+	}
+	//channel = server.getChannelByName(parameter);
+	std::cout << "mensaje: " << client.nick << " topic: " << parameter << std::endl;
+	(void) server;
+}
+
+// std::string	Server::_topic(Request request, int i)
+// {
+// 	if (!this->_clients[i]->getRegistered())
+// 		return (_printMessage("451", this->_clients[i]->getNickName(), ":You have not registered"));
+// 	if (request.args.size() == 0)
+// 		return (_printMessage("461", this->_clients[i]->getNickName(), ":Not enough parameters"));
+// 	if (request.args.size() == 1)
+// 	{
+// 		if (this->_allChannels.find(request.args[0])->second->getTopic().empty())
+// 			return (_printMessage("331", this->_clients[i]->getNickName(), request.args[0] + " :No topic is set"));
+// 		else
+// 			return (_printMessage("332", this->_clients[i]->getNickName(), request.args[0] + " :" + this->_allChannels.find(request.args[0])->second->getTopic()));
+// 	}
+// 	std::map<std::string, Channel *>::iterator it = this->_allChannels.find(request.args[0]);
+// 	if (it != this->_allChannels.end())
+// 	{
+// 		std::pair<Client *, int> user = it->second->findUserRole(i);
+// 		if (user.second == 1)
+// 		{
+// 			it->second->setTopic(request.args[1]);
+// 			std::string reply = "TOPIC " + it->second->getName() + ":" + request.args[1] + "\n";
+// 			_sendToAllUsers(it->second, i, reply);
+// 		}
+// 		else if (user.second == -1  /* Not in channel */)
+// 			return (_printMessage("442", this->_clients[i]->getNickName(), request.args[0] + " :You're not on that channel"));
+// 		else
+// 			return (_printMessage("482", this->_clients[i]->getNickName(), request.args[0] + " :You're not channel operator"));
+// 	}
+// 	return ("");
+// }
