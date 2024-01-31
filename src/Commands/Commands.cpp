@@ -289,7 +289,7 @@ bool Commands::parseNick( const std::string & parameter)
 	// check if there is an ascii space <' '>	
 	for (int i = 0; i < int(parameter.size()); i++)
 	{
-		if (parameter[i] == ' ')
+		if (parameter[i] == ' ' || parameter[i] == ',')
 			return false;
 	}
 	
