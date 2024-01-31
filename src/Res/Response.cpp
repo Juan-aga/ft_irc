@@ -120,3 +120,23 @@ void Response::Broadcast(std::vector<Client *> clients, bool self) {
 		this->To(*(*it)).Send();
 	}
 }
+
+void Response::Broadcast(std::map< Channel *, std::string >	channels, bool self) {
+	std::map< Channel *, std::string >::iterator	channel;
+	std::vector<Client *>::iterator 				it;
+	
+	for (channel = channels.begin(); channel != channels.end(); channel++)
+	{
+		for (it = channel->first->clients.begin(); it != channel->first->clients.end(); it++)
+		{
+			if (self && (*it)->nick == this->from)
+			{
+				this->To(*(*it)).Send();
+				self = !self;
+				continue;
+			}
+
+			this->To(*(*it)).Send();
+		}
+	}
+}

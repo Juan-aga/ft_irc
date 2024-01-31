@@ -16,7 +16,6 @@ public:
 	std::string nick;
 	std::string user;
 	std::string realName;
-	std::string host;
 	std::string ip;
 	//maybe we change the string for the enum of modes
 	std::map< Channel *, std::string >	channels;

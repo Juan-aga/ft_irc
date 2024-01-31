@@ -77,6 +77,7 @@ std::string							Channel::getNamereply( void )
 {
 	std:: string	msg = "";
 
+	// we have to show the clients depending on this modes. We need to apply fiters.
 	for (std::vector< Client *>::iterator gclients = clients.begin(); gclients != clients.end(); gclients++)
 		msg += (*gclients)->channels[this] + (*gclients)->nick + " ";
 	return msg;
