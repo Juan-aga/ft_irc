@@ -7,6 +7,7 @@ void        Commands::execCap( const std::string & parameter, Client & client, S
 	(void)parameter;
 	(void)client;
 	(void)server;
+	addFileLog("[-]Client from ip: " + client.ip + " trying CAP: " + parameter + ". Not supported.", RED_CMD);
 }
 
 void        Commands::execPass( const std::string & parameter, Client & client, Server & server )
@@ -19,7 +20,7 @@ void        Commands::execPass( const std::string & parameter, Client & client, 
 	else if (client.status >= CONNECTED)
 	{
 		Response::createReply(ERR_ALREADYREGISTERED).From(server).To(client).Trailer("You may not reregister").Send();
-		addFileLog("[-]Client from ip: " + client.ip + " failed to connect (You may not reregister).", RED_CMD);
+		addFileLog("[-]Client: " + client.nick + " already connected (You may not reregister).", RED_CMD);
 	}
 	else if (parameter == server.getPassword())
 		client.status = AUTH;
@@ -36,9 +37,21 @@ void Commands::execNick( const std::string & parameter, Client & client, Server 
 	Client * check;
 	
 	if (parameter.empty())
+	{
 		Response::createReply(ERR_NONICKNAMEGIVEN).From(server).To(client).Trailer("No nickname given").Send();
+		if (client.nick == "")
+			addFileLog("[-]Client from ip: " + client.ip + " failed to execute NICK (No nickname given).", RED_CMD);
+		else
+			addFileLog("[-]Client: " + client.nick + " failed to execute NICK (No nickname given).", RED_CMD);
+	}
 	else if (!parseNick(parameter))
+	{
 		Response::createReply(ERR_ERRONEUSNICKNAME).From(server).To(client).Command(parameter).Trailer("Erroneus nickname").Send();
+		if (client.nick == "")
+			addFileLog("[-]Client from ip: " + client.ip + " failed to execute NICK (Erroneus nickname).", RED_CMD);
+		else
+			addFileLog("[-]Client: " + client.nick + " failed to execute NICK (Erroneus nickname).", RED_CMD);
+	}
 	else
 	{
 		check = server.getClientByNick(parameter);
