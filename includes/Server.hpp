@@ -43,6 +43,7 @@ class Server
 		void newClient(std::vector<struct pollfd> &pollfds);
 		Channel *	getChannelByName( std::string const & name );
 		Client *	getClientByNick( std::string const & nick );
+		void		closeChannel( Channel * channel );
 		static void	stopServer( void );
 };
 
