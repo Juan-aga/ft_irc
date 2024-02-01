@@ -60,9 +60,8 @@ void Commands::execNick( const std::string & parameter, Client & client, Server 
 		else
 		{
             if (client.channels.size())
-			    Response::createMessage().From(client).Command("NICK " + parameter).Broadcast(client.channels, true);
-            else
-                Response::createMessage().From(client).To(client).Command("NICK " + parameter).Send();
+			    Response::createMessage().From(client).Command("NICK " + parameter).Broadcast(client.channels, false);
+            Response::createMessage().From(client).To(client).Command("NICK " + parameter).Send();
 			client.nick = parameter;
 		}
 	}
