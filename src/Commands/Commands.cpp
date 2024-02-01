@@ -12,6 +12,7 @@ Commands::Commands( void )
 	commandMap["PRIVMSG"] = PRIVMSG;
 	commandMap["KILLSERVER"] = KILLSERVER;
 	commandMap["TOPIC"] = TOPIC;
+	commandMap["PART"] = PART;
 
 	commands[CAP].exec = &execCap;
 	commands[PASS].exec = &execPass;
@@ -22,6 +23,7 @@ Commands::Commands( void )
 	commands[PRIVMSG].exec = &execPrivmsg;
 	commands[KILLSERVER].exec = &execKill;
 	commands[TOPIC].exec = &execTopic;
+	commands[PART].exec = &execPart;
 }
 
 Commands::~Commands( void )

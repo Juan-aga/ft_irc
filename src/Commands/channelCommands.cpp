@@ -23,7 +23,7 @@ void        Commands::execJoin( const std::string & parameter, Client * client, 
 	
 	// If parameter is "0", the client leave all channels. execute PART for every channel.
 	channel = server.getChannelByName(parameter);
-	if (parameter[0] != '#')
+	if (parameter == "" || parameter[0] != '#' || !parameter[1])
 	{
 		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("JOIN").Trailer("Not enough parameters").Send();
 		addFileLog("[-]Client: " + client->nick + " tried to join an invalid channel: " + parameter, RED_CMD);
@@ -163,3 +163,31 @@ void	Commands::execTopic( const std::string & parameter, Client * client, Server
 // 	}
 // 	return ("");
 // }
+
+void	Commands::execPart( const std::string & parameter, Client * client, Server & server )
+{
+	Channel *   channel;
+	std::string name, reason;
+	std::string::size_type space, colon;
+
+	space = parameter.find(" ");
+	colon = parameter.find(":");
+	if (parameter == "" || parameter[0] != '#' || !parameter[1] || space == std::string::npos || colon == std::string::npos)
+		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("PART").Trailer("Not enough parameters").Send();
+	else
+	{
+		name = parameter.substr(0, space);
+		reason = parameter.substr(colon + 1, parameter.size());
+		channel = server.getChannelByName(name);
+		if (!channel)
+			Response::createReply(ERR_NOSUCHCHANNEL).From(server).To(*client).Command(name).Trailer("No such channel").Send();
+		else if (channel->isClient(client->nick))
+		{
+			Response::createMessage().From(*client).Command("PART " + name).Trailer(reason).Broadcast(client->channels, true);
+			channel->delClient(client, server);
+			client->channels.erase(channel);
+		}
+		else
+			Response::createReply(ERR_NOTONCHANNEL).From(server).To(*client).Command(name).Trailer("You're not on that channel").Send();
+	}
+}
