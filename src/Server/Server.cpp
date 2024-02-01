@@ -173,8 +173,9 @@ void		Server::closeChannel( Channel * channel )
 	{
 		if (channels[i] == channel)
 		{
-			channels.erase(channels.begin() + i);
 			addFileLog("[!]Channel: " + channel->name + " has been closed.",  YELLOW_CMD);
+			delete channel;
+			channels.erase(channels.begin() + i);
 			break;
 		}
 	}
