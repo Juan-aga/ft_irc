@@ -103,7 +103,7 @@ static std::vector<std::string> splitTopic(const std::string& str)
 	std::string::size_type next = str.find(":");
 	if (next != std::string::npos)
 	{
-		tokens.push_back(str.substr(pos, next - pos));
+		tokens.push_back(str.substr(pos, next - pos - 1));
 		pos = next + 1;
 		next = str.find(":", pos);
 	}
@@ -117,49 +117,34 @@ static std::vector<std::string> splitTopic(const std::string& str)
 void	Commands::execTopic( const std::string & parameter, Client & client, Server & server )
 {
 	std::vector<std::string>    tokens = splitTopic(parameter);
-	//Channel *   channel;
-	std::cout << "mensaje: " << client.nick << " topic: " << parameter << std::endl;
-	std::cout << "tokens size: " << tokens.size() << std::endl;
-	std::cout << "tokens[0]: " << tokens[0] << std::endl;
-	if (tokens.size() > 1)
-		std::cout << "tokens[1]: " << tokens[1] << std::endl;
-	if (parameter[0] != '#')
+	Channel *channel = server.getChannelByName(tokens[0]);
+	if (parameter[0] != '#' || !channel)
 	{
-		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(client).Command("NICK").Trailer("invalid channel to change topic").Send();
-		addFileLog("[-]Client: " + client.nick + " tried to changed a topic on invalid channel: " + parameter, RED_CMD);
+		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(client).Command("NICK").Trailer("invalid channel").Send();
+		addFileLog("[-]Client: " + client.nick + " tried to use topic on an invalid channel: " + parameter, RED_CMD);
+		return ;
 	}
-	//channel = server.getChannelByName(parameter);
-	
-	(void) server;
+	if (tokens.size() == 1)
+	{
+		if (channel->topic.empty())
+			Response::createReply(RPL_NOTOPIC).From(server).To(client).Command(channel->name).Trailer("No topic is set").Send();
+		else
+			Response::createReply(RPL_TOPIC).From(server).To(client).Command(channel->name).Trailer(channel->topic).Send();
+	}
+	else
+	{
+		if (channel->isClient(client.nick))
+		{
+			//add here the check for the permissions to change the topic if you are the operator
+			channel->topic = tokens[1];
+			Response::createMessage().From(client).Command("TOPIC " + channel->name + " :" + channel->topic).Broadcast(channel->clients, false);
+			Response::createReply(RPL_TOPIC).From(server).To(client).Command(channel->name).Trailer(channel->topic).Send();
+			addFileLog("[+]Client: " + client.nick + " changed topic of channel: " + channel->name + " to: " + channel->topic, GREEN_CMD);
+		}
+		else
+		{
+			Response::createReply(ERR_NOTONCHANNEL).From(server).To(client).Command(channel->name).Trailer("You're not on that channel").Send();
+			addFileLog("[-]Client: " + client.nick + " tried to change topic of channel: " + channel->name + " but is not on it.", RED_CMD);
+		}
+	}
 }
-
-// std::string	Server::_topic(Request request, int i)
-// {
-// 	if (!this->_clients[i]->getRegistered())
-// 		return (_printMessage("451", this->_clients[i]->getNickName(), ":You have not registered"));
-// 	if (request.args.size() == 0)
-// 		return (_printMessage("461", this->_clients[i]->getNickName(), ":Not enough parameters"));
-// 	if (request.args.size() == 1)
-// 	{
-// 		if (this->_allChannels.find(request.args[0])->second->getTopic().empty())
-// 			return (_printMessage("331", this->_clients[i]->getNickName(), request.args[0] + " :No topic is set"));
-// 		else
-// 			return (_printMessage("332", this->_clients[i]->getNickName(), request.args[0] + " :" + this->_allChannels.find(request.args[0])->second->getTopic()));
-// 	}
-// 	std::map<std::string, Channel *>::iterator it = this->_allChannels.find(request.args[0]);
-// 	if (it != this->_allChannels.end())
-// 	{
-// 		std::pair<Client *, int> user = it->second->findUserRole(i);
-// 		if (user.second == 1)
-// 		{
-// 			it->second->setTopic(request.args[1]);
-// 			std::string reply = "TOPIC " + it->second->getName() + ":" + request.args[1] + "\n";
-// 			_sendToAllUsers(it->second, i, reply);
-// 		}
-// 		else if (user.second == -1  /* Not in channel */)
-// 			return (_printMessage("442", this->_clients[i]->getNickName(), request.args[0] + " :You're not on that channel"));
-// 		else
-// 			return (_printMessage("482", this->_clients[i]->getNickName(), request.args[0] + " :You're not channel operator"));
-// 	}
-// 	return ("");
-// }
