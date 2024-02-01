@@ -10,6 +10,7 @@ Commands::Commands( void )
 	commandMap["JOIN"] = JOIN;
 	commandMap["PRIVMSG"] = PRIVMSG;
 	commandMap["KILLSERVER"] = KILLSERVER;
+	commandMap["MODE"] = MODE;
 
 	commands[CAP].exec = &execCap;
 	commands[PASS].exec = &execPass;
@@ -18,6 +19,7 @@ Commands::Commands( void )
 	commands[JOIN].exec = &execJoin;
 	commands[PRIVMSG].exec = &execPrivmsg;
 	commands[KILLSERVER].exec = &execKill;
+	commands[MODE].exec = &execMode;
 }
 
 Commands::~Commands( void )

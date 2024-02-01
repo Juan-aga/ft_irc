@@ -17,6 +17,64 @@
 //  Operator:	prefix @		+o
 //  regular :	prefix +		+v
 
+//split
+static std::vector<std::string> splitString(const std::string& input, char delimiter) {
+	std::vector<std::string> parts;
+	
+	size_t pos = 0;
+	std::string token;
+	std::string str = input;  
+	
+	while ((pos = str.find(delimiter)) != std::string::npos) {
+		token = str.substr(0, pos);
+		parts.push_back(token);
+		str.erase(0, pos + 1);
+	}
+	parts.push_back(str);
+	
+	return parts;
+}
+
+void		Commands::execMode(const std::string & parameter, Client & client, Server & server)
+{
+	std::vector<std::string> parameters;
+	parameters.push_back(parameter);
+	(void)client;
+	(void)server;
+	// (void)parameter;
+	
+	parameters = splitString(parameter, ' ');
+	if (parameters[0] == client.nick)
+	{
+		std::cout << "server MODE" << std::endl;
+		//server MODE
+	}
+	else if (parameters[0][0] == '#') //
+	{
+		std::cout << "channel MODE" << std::endl;
+		if ((parameters[1].size() == 2 && parameters[1][0] == '+'))
+		{
+			if (parameters[1] == "+i")
+				std::cout << "channel MODE invite only" << std::endl;
+			else if (parameters[1] == "+t")
+				std::cout << "channel MODE protected topic" << std::endl;
+			else if (parameters[1] == "+k")
+				std::cout << "channel MODE key channel" << std::endl;
+			else if (parameters[1] == "+l")
+				std::cout << "channel MODE limit client" << std::endl;
+			else
+				std::cout << "channel MODE error" << std::endl;
+			
+		}
+			std::cout << "channel MODE parameter" << parameters[1] << std::endl;
+		//chanel MODE
+	}
+	else
+		std::cout << "void MODE" << std::endl;
+	//std::cout << "[!]/MODE param1: " << parameters[1] << std::endl;
+	//delete [] char_array;
+}
+
 void        Commands::execJoin( const std::string & parameter, Client & client, Server & server )
 {
 	Channel *   channel;

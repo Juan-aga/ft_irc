@@ -22,7 +22,9 @@ class Commands
 			PRIVMSG,
 			//to close the erver.
 			KILLSERVER,
-			MAX_CMD
+			//mode
+			MODE,
+			MAX_CMD	
 		};
 		typedef void (*cmdFunction)(const std::string &, Client &, Server &);
 		typedef struct s_commands
@@ -45,6 +47,7 @@ class Commands
 		static void execJoin( const std::string & parameter, Client & client, Server & server );
 		static void execPrivmsg( const std::string & parameter, Client & client, Server & server );
 		static void execKill( const std::string & parameter, Client & client, Server & server );
+		static void	execMode(const std::string & parameter, Client & client, Server & server);
 		
 	public:
 		Commands( void );
