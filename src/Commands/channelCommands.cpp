@@ -21,11 +21,11 @@ void        Commands::execJoin( const std::string & parameter, Client & client, 
 {
 	Channel *   channel;
 	
-    // If parameter is "0", the client leave all channels. execute PART for every channel.
+	// If parameter is "0", the client leave all channels. execute PART for every channel.
 	channel = server.getChannelByName(parameter);
 	if (parameter[0] != '#')
 	{
-        Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(client).Command("NICK").Trailer("Not enough parameters").Send();
+		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(client).Command("NICK").Trailer("Not enough parameters").Send();
 		addFileLog("[-]Client: " + client.nick + " tried to join an invalid channel: " + parameter, RED_CMD);
 	}
 	else if (channel)
@@ -33,7 +33,7 @@ void        Commands::execJoin( const std::string & parameter, Client & client, 
 		if (channel->isClient(client.nick))
 			addFileLog("[!]Client: " + client.nick + " is already a member of channel: " + parameter, YELLOW_CMD);
 		//we have to check permmisions
-        // send ERR_INVITEONLYCHAN (473) or ERR_BANNEDFROMCHAN (474)
+		// send ERR_INVITEONLYCHAN (473) or ERR_BANNEDFROMCHAN (474)
 		else
 		{
 			addFileLog("[+]Client: " + client.nick + " joined channel: " + parameter, GREEN_CMD);
@@ -96,17 +96,40 @@ void    Commands::execPrivmsg( const std::string & parameter, Client & client, S
 	}
 }
 
+static std::vector<std::string> splitTopic(const std::string& str)
+{
+	std::vector<std::string> tokens;
+	std::string::size_type pos = 0;
+	std::string::size_type next = str.find(":");
+	if (next != std::string::npos)
+	{
+		tokens.push_back(str.substr(pos, next - pos));
+		pos = next + 1;
+		next = str.find(":", pos);
+	}
+	if (next == std::string::npos)
+	{
+		tokens.push_back(str.substr(pos));
+	}
+	return tokens;
+}
+
 void	Commands::execTopic( const std::string & parameter, Client & client, Server & server )
 {
+	std::vector<std::string>    tokens = splitTopic(parameter);
 	//Channel *   channel;
-	
+	std::cout << "mensaje: " << client.nick << " topic: " << parameter << std::endl;
+	std::cout << "tokens size: " << tokens.size() << std::endl;
+	std::cout << "tokens[0]: " << tokens[0] << std::endl;
+	if (tokens.size() > 1)
+		std::cout << "tokens[1]: " << tokens[1] << std::endl;
 	if (parameter[0] != '#')
 	{
-        Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(client).Command("NICK").Trailer("invalid channel to change topic").Send();
+		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(client).Command("NICK").Trailer("invalid channel to change topic").Send();
 		addFileLog("[-]Client: " + client.nick + " tried to changed a topic on invalid channel: " + parameter, RED_CMD);
 	}
 	//channel = server.getChannelByName(parameter);
-	std::cout << "mensaje: " << client.nick << " topic: " << parameter << std::endl;
+	
 	(void) server;
 }
 
