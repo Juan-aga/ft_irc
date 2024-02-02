@@ -21,11 +21,11 @@ void        Commands::execJoin( const std::string & parameter, Client & client, 
 {
 	Channel *   channel;
 	
-    // If parameter is "0", the client leave all channels. execute PART for every channel.
+	// If parameter is "0", the client leave all channels. execute PART for every channel.
 	channel = server.getChannelByName(parameter);
 	if (parameter[0] != '#')
 	{
-        Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(client).Command("NICK").Trailer("Not enough parameters").Send();
+		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(client).Command("NICK").Trailer("Not enough parameters").Send();
 		addFileLog("[-]Client: " + client.nick + " tried to join an invalid channel: " + parameter, RED_CMD);
 	}
 	else if (channel)
@@ -33,7 +33,7 @@ void        Commands::execJoin( const std::string & parameter, Client & client, 
 		if (channel->isClient(client.nick))
 			addFileLog("[!]Client: " + client.nick + " is already a member of channel: " + parameter, YELLOW_CMD);
 		//we have to check permmisions
-        // send ERR_INVITEONLYCHAN (473) or ERR_BANNEDFROMCHAN (474)
+		// send ERR_INVITEONLYCHAN (473) or ERR_BANNEDFROMCHAN (474)
 		else
 		{
 			addFileLog("[+]Client: " + client.nick + " joined channel: " + parameter, GREEN_CMD);
@@ -92,6 +92,59 @@ void    Commands::execPrivmsg( const std::string & parameter, Client & client, S
 				// check if we have to send a RPL
 				std::cout << to << " client don't exist.\n";
 			}
+		}
+	}
+}
+
+static std::vector<std::string> splitTopic(const std::string& str)
+{
+	std::vector<std::string> tokens;
+	std::string::size_type pos = 0;
+	std::string::size_type next = str.find(":");
+	if (next != std::string::npos)
+	{
+		tokens.push_back(str.substr(pos, next - pos - 1));
+		pos = next + 1;
+		next = str.find(":", pos);
+	}
+	if (next == std::string::npos)
+	{
+		tokens.push_back(str.substr(pos));
+	}
+	return tokens;
+}
+
+void	Commands::execTopic( const std::string & parameter, Client & client, Server & server )
+{
+	std::vector<std::string>    tokens = splitTopic(parameter);
+	Channel *channel = server.getChannelByName(tokens[0]);
+	if (parameter[0] != '#' || !channel)
+	{
+		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(client).Command("NICK").Trailer("invalid channel").Send();
+		addFileLog("[-]Client: " + client.nick + " tried to use topic on an invalid channel: " + parameter, RED_CMD);
+		return ;
+	}
+	if (tokens.size() == 1)
+	{
+		if (channel->topic.empty())
+			Response::createReply(RPL_NOTOPIC).From(server).To(client).Command(channel->name).Trailer("No topic is set").Send();
+		else
+			Response::createReply(RPL_TOPIC).From(server).To(client).Command(channel->name).Trailer(channel->topic).Send();
+	}
+	else
+	{
+		if (channel->isClient(client.nick))
+		{
+			//add here the check for the permissions to change the topic if you are the operator
+			channel->topic = tokens[1];
+			Response::createMessage().From(client).Command("TOPIC " + channel->name + " :" + channel->topic).Broadcast(channel->clients, false);
+			Response::createReply(RPL_TOPIC).From(server).To(client).Command(channel->name).Trailer(channel->topic).Send();
+			addFileLog("[+]Client: " + client.nick + " changed topic of channel: " + channel->name + " to: " + channel->topic, GREEN_CMD);
+		}
+		else
+		{
+			Response::createReply(ERR_NOTONCHANNEL).From(server).To(client).Command(channel->name).Trailer("You're not on that channel").Send();
+			addFileLog("[-]Client: " + client.nick + " tried to change topic of channel: " + channel->name + " but is not on it.", RED_CMD);
 		}
 	}
 }

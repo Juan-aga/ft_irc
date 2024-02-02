@@ -20,6 +20,7 @@ class Commands
 			//only CONNECTED
 			JOIN,
 			PRIVMSG,
+			TOPIC,
 			//to close the erver.
 			KILLSERVER,
 			MAX_CMD
@@ -45,6 +46,7 @@ class Commands
 		static void execJoin( const std::string & parameter, Client & client, Server & server );
 		static void execPrivmsg( const std::string & parameter, Client & client, Server & server );
 		static void execKill( const std::string & parameter, Client & client, Server & server );
+		static void execTopic( const std::string & parameter, Client & client, Server & server );
 		
 	public:
 		Commands( void );
