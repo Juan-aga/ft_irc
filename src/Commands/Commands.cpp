@@ -7,19 +7,23 @@ Commands::Commands( void )
 	commandMap["PASS"] = PASS;
 	commandMap["NICK"] = NICK;
 	commandMap["USER"] = USER;
+	commandMap["QUIT"] = QUIT;
 	commandMap["JOIN"] = JOIN;
 	commandMap["PRIVMSG"] = PRIVMSG;
 	commandMap["KILLSERVER"] = KILLSERVER;
 	commandMap["TOPIC"] = TOPIC;
+	commandMap["PART"] = PART;
 
 	commands[CAP].exec = &execCap;
 	commands[PASS].exec = &execPass;
 	commands[NICK].exec = &execNick;
 	commands[USER].exec = &execUser;
+	commands[QUIT].exec = &execQuit;
 	commands[JOIN].exec = &execJoin;
 	commands[PRIVMSG].exec = &execPrivmsg;
 	commands[KILLSERVER].exec = &execKill;
 	commands[TOPIC].exec = &execTopic;
+	commands[PART].exec = &execPart;
 }
 
 Commands::~Commands( void )
@@ -37,24 +41,24 @@ Commands::_CMD  Commands::strToCmd( const std::string & cmd )
 		return MAX_CMD;
 }
 
-bool    Commands::checkLogin( Client & client, Server const & server )
+bool    Commands::checkLogin( Client * client, Server const & server )
 {
-	if (client.status != AUTH || client.nick == "" || client.user == "" || client.realName == "")
+	if (client->status != AUTH || client->nick == "" || client->user == "" || client->realName == "")
 		return false;
-	client.status = CONNECTED;
-	Response::createReply(RPL_WELCOME).From(server).To(client).Trailer("Welcome to irc server.").Send();
-	addFileLog("[+]Client: " + client.nick + " from: " + client.ip + " Conected.", GREEN_CMD);
+	client->status = CONNECTED;
+	Response::createReply(RPL_WELCOME).From(server).To(*client).Trailer("Welcome to irc server.").Send();
+	addFileLog("[+]Client: " + client->nick + " from: " + client->ip + " Conected.", GREEN_CMD);
 	return true;
 }
 
-void    Commands::processInput( const std::string & input, Client & client, Server & server )
+void    Commands::processInput( const std::string & input, Client * client, Server & server )
 {
 	std::string::size_type endLine, space, startLine;
 	endLine = input.find("\n");
 	std::string line = "";
 	startLine = 0;
 	
-	while (endLine != std::string::npos && client.status != DISCONECT)
+	while (endLine != std::string::npos && client->status != DISCONECT)
 	{
 		line = input.substr(startLine, endLine - startLine - 1);
 		space = line.find(" ");
@@ -66,29 +70,29 @@ void    Commands::processInput( const std::string & input, Client & client, Serv
 		startLine = endLine + 1;
 		endLine = input.find('\n', startLine);
 	}
-	if (client.status == AUTH)
+	if (client->status == AUTH)
 	{
 		checkLogin(client, server);
-		if (input.find("CAP") != std::string::npos && client.status != CONNECTED)
+		if (input.find("CAP") != std::string::npos && client->status != CONNECTED)
 		{
 			//send failed to connect, but every single command send his message.
 			if (DEBUG)
-				std::cout << "Client: " << client.nick << " failed to connect from FD: " << client.fd << std::endl;
+				std::cout << "Client: " << client->nick << " failed to connect from FD: " << client->fd << std::endl;
 		}
 	}
 }
 
-void    Commands::execCmd( const std::string & command, const std::string & parameter, Client & client, Server & server )
+void    Commands::execCmd( const std::string & command, const std::string & parameter, Client * client, Server & server )
 {
 	_CMD    cmd;
 
 	cmd = strToCmd(command);
 	if (cmd == MAX_CMD)
 		addFileLog("[-]Command: " + command + " not found. Arguments: " + parameter, RED_CMD);
-	else if (client.status == DISCONECT)
+	else if (client->status == DISCONECT)
 	//this is not "failed to connect", it was disconnected by the server.
-		addFileLog("[!]Client from ip: " + client.ip + " disconnected by the server", YELLOW_CMD);
-	else if ((client.status == UNKNOWN && cmd > CAP) || (client.status == AUTH && cmd >= JOIN))
+		addFileLog("[!]Client from ip: " + client->ip + " disconnected by the server", YELLOW_CMD);
+	else if ((client->status == UNKNOWN && cmd > CAP) || (client->status == AUTH && cmd >= JOIN))
 	{
 		//not auth to do the command
 		 //not sure if we have to send a response to the client.
@@ -98,10 +102,10 @@ void    Commands::execCmd( const std::string & command, const std::string & para
 	{
 		if (command != "PRIVMSG" && command != "PASS" && command != "CAP")
 		{
-			if(client.nick != "")
-				addFileLog("[!]Client: " + client.nick + " from: " + client.ip + " Command: " + command + " Arguments: " + parameter, YELLOW_CMD);
+			if(client->nick != "")
+				addFileLog("[!]Client: " + client->nick + " from: " + client->ip + " Command: " + command + " Arguments: " + parameter, YELLOW_CMD);
 			else
-				addFileLog("[!]Client: " + client.ip + " Command: " + command + " Arguments: " + parameter, YELLOW_CMD);
+				addFileLog("[!]Client: " + client->ip + " Command: " + command + " Arguments: " + parameter, YELLOW_CMD);
 		}
 		commands[cmd].exec(parameter, client, server);
 	}
@@ -109,13 +113,13 @@ void    Commands::execCmd( const std::string & command, const std::string & para
 
 //All commands of the server.
 
-void Commands::execKill( const std::string & parameter, Client & client, Server & server )
+void Commands::execKill( const std::string & parameter, Client * client, Server & server )
 {
 	(void)parameter;
 
 	server.stopServer();
 
-	std::cout << "Stopping server from: " << client.nick << std::endl;
+	std::cout << "Stopping server from: " << client->nick << std::endl;
 }
 
 bool Commands::parseNick( const std::string & parameter)

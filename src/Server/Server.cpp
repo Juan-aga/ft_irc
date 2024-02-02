@@ -96,7 +96,7 @@ void Server::readMesage(Client * client)
 			break;
 		}
 	}
-	_commands.processInput(readBuffer, *client, *this);
+	_commands.processInput(readBuffer, client, *this);
 }
 
 void Server::newClient(std::vector<struct pollfd>& pollfds)
@@ -165,6 +165,20 @@ Client *	Server::getClientByNick( std::string const & nick )
 			return it->second;
 	}
 	return NULL;
+}
+
+void		Server::closeChannel( Channel * channel )
+{
+	for (size_t i = 0; i < channels.size(); i++)
+	{
+		if (channels[i] == channel)
+		{
+			addFileLog("[!]Channel: " + channel->name + " has been closed.",  YELLOW_CMD);
+			delete channel;
+			channels.erase(channels.begin() + i);
+			break;
+		}
+	}
 }
 
 void		Server::stopServer( void )

@@ -47,26 +47,22 @@ bool	Channel::addClient( Client * client, Server const & server )
 	return true;
 }
 
-bool	Channel::delClient( Client * client, Server const & server )
+bool	Channel::delClient( Client * client, Server & server )
 {
-	(void)server;
-
-	client->channels.erase(this);
-	for (std::vector< Client *>::iterator it = clients.begin(); it != clients.end(); it++)
+	for (size_t i = 0; i < clients.size(); i++)
 	{
-		if (*it == client)
+		if (clients[i] == client)
 		{
-			clients.erase(it);
+			clients.erase(clients.begin() + i);
 			break;
 		}
 	}
 	if (--_numClients <= 0)
-	{}//we need to delete this channel.. maybe create a function on the server?
-	// server need to broadcast that the client was quit.
+		server.closeChannel(this);
 	return true;
 }
 
-bool	Channel::isClient( std::string const & nick)
+bool	Channel::isClient( std::string const & nick )
 {
 	std::map< Client*, std::string >::iterator	it;
 
@@ -82,7 +78,6 @@ std::string							Channel::getNamereply( void )
 {
 	std:: string	msg = "";
 
-	// we have to show the clients depending on this modes. We need to apply fiters.
 	for (std::vector< Client *>::iterator gclients = clients.begin(); gclients != clients.end(); gclients++)
 		msg += (*gclients)->channels[this] + (*gclients)->nick + " ";
 	return msg;

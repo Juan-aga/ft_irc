@@ -31,7 +31,7 @@ class Channel
 		~Channel( void );
 		
 		bool	addClient( Client * client, Server const & server );
-		bool	delClient( Client * client, Server const & server );
+		bool	delClient( Client * client, Server & server );
 		bool	isClient( std::string const & nick );
 		
 		std::string							getNamereply( void );

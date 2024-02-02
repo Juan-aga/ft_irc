@@ -3,7 +3,7 @@ NAME = ircserv
 HOST = $(shell hostname)
 
 CC = c++
-CFLAGS = -Wall -Werror -Wextra -std=c++98 -D DEBUG=$(DEBUG) -D HOST=\"$(HOST)\"
+CFLAGS = -Wall -Werror -Wextra -std=c++98 -g -D DEBUG=$(DEBUG) -D HOST=\"$(HOST)\"
 RM = rm -rf
 
 Y = \033[33m
