@@ -120,31 +120,59 @@ void	Commands::execTopic( const std::string & parameter, Client * client, Server
 	Channel *channel = server.getChannelByName(tokens[0]);
 	if (parameter[0] != '#' || !channel)
 	{
-		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(client).Command("NICK").Trailer("invalid channel").Send();
-		addFileLog("[-]Client: " + client.nick + " tried to use topic on an invalid channel: " + parameter, RED_CMD);
+		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("NICK").Trailer("invalid channel").Send();
+		addFileLog("[-]Client: " + client->nick + " tried to use topic on an invalid channel: " + parameter, RED_CMD);
 		return ;
 	}
 	if (tokens.size() == 1)
 	{
 		if (channel->topic.empty())
-			Response::createReply(RPL_NOTOPIC).From(server).To(client).Command(channel->name).Trailer("No topic is set").Send();
+			Response::createReply(RPL_NOTOPIC).From(server).To(*client).Command(channel->name).Trailer("No topic is set").Send();
 		else
-			Response::createReply(RPL_TOPIC).From(server).To(client).Command(channel->name).Trailer(channel->topic).Send();
+			Response::createReply(RPL_TOPIC).From(server).To(*client).Command(channel->name).Trailer(channel->topic).Send();
 	}
 	else
 	{
-		if (channel->isClient(client.nick))
+		if (channel->isClient(client->nick))
 		{
 			//add here the check for the permissions to change the topic if you are the operator
 			channel->topic = tokens[1];
-			Response::createMessage().From(client).Command("TOPIC " + channel->name + " :" + channel->topic).Broadcast(channel->clients, false);
-			Response::createReply(RPL_TOPIC).From(server).To(client).Command(channel->name).Trailer(channel->topic).Send();
-			addFileLog("[+]Client: " + client.nick + " changed topic of channel: " + channel->name + " to: " + channel->topic, GREEN_CMD);
+			Response::createMessage().From(*client).Command("TOPIC " + channel->name + " :" + channel->topic).Broadcast(channel->clients, false);
+			Response::createReply(RPL_TOPIC).From(server).To(*client).Command(channel->name).Trailer(channel->topic).Send();
+			addFileLog("[+]Client: " + client->nick + " changed topic of channel: " + channel->name + " to: " + channel->topic, GREEN_CMD);
 		}
 		else
 		{
-			Response::createReply(ERR_NOTONCHANNEL).From(server).To(client).Command(channel->name).Trailer("You're not on that channel").Send();
-			addFileLog("[-]Client: " + client.nick + " tried to change topic of channel: " + channel->name + " but is not on it.", RED_CMD);
+			Response::createReply(ERR_NOTONCHANNEL).From(server).To(*client).Command(channel->name).Trailer("You're not on that channel").Send();
+			addFileLog("[-]Client: " + client->nick + " tried to change topic of channel: " + channel->name + " but is not on it.", RED_CMD);
 		}
+	}
+}
+
+void	Commands::execPart( const std::string & parameter, Client * client, Server & server )
+{
+	Channel *   channel;
+	std::string name, reason;
+	std::string::size_type space, colon;
+
+	space = parameter.find(" ");
+	colon = parameter.find(":");
+	if (parameter == "" || parameter[0] != '#' || !parameter[1] || space == std::string::npos || colon == std::string::npos)
+		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("PART").Trailer("Not enough parameters").Send();
+	else
+	{
+		name = parameter.substr(0, space);
+		reason = parameter.substr(colon + 1, parameter.size());
+		channel = server.getChannelByName(name);
+		if (!channel)
+			Response::createReply(ERR_NOSUCHCHANNEL).From(server).To(*client).Command(name).Trailer("No such channel").Send();
+		else if (channel->isClient(client->nick))
+		{
+			Response::createMessage().From(*client).Command("PART " + name).Trailer(reason).Broadcast(client->channels, true);
+			channel->delClient(client, server);
+			client->channels.erase(channel);
+		}
+		else
+			Response::createReply(ERR_NOTONCHANNEL).From(server).To(*client).Command(name).Trailer("You're not on that channel").Send();
 	}
 }
