@@ -29,6 +29,18 @@ Channel::~Channel( void )
 	Server::numChannels -= 1;
 }
 
+bool	Channel::validName( std::string const & name )
+{
+	if (name[0] != '#' || !name[1])
+		return false;
+	for (size_t i = 1; i < name.size(); i++)
+	{
+		if (name[i] == ' ' || name[i] == 7 || name[i] == ',')
+			return false;
+	}
+	return true;
+}
+
 bool	Channel::addClient( Client * client, Server const & server )
 {
     std::string msg;

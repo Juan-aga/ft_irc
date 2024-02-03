@@ -21,9 +21,14 @@ void        Commands::execJoin( const std::string & parameter, Client * client, 
 {
 	Channel *   channel;
 	
-	// If parameter is "0", the client leave all channels. execute PART for every channel.
 	channel = server.getChannelByName(parameter);
-	if (parameter == "" || parameter[0] != '#' || !parameter[1])
+	// If parameter is "0", the client leave all channels. execute PART for every channel.
+	if (parameter.size() == 1 && parameter[0] == '0')
+	{
+		for (std::map< Channel *, std::string >::iterator chan = client->channels.begin(); client->channels.size() > 0; chan = client->channels.begin())
+			execPart(chan->first->name + " " , client, server);
+	}
+	else if (!Channel::validName(parameter))
 	{
 		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("JOIN").Trailer("Not enough parameters").Send();
 		addFileLog("[-]Client: " + client->nick + " tried to join an invalid channel: " + parameter, RED_CMD);
@@ -33,7 +38,7 @@ void        Commands::execJoin( const std::string & parameter, Client * client, 
 		if (channel->isClient(client->nick))
 			addFileLog("[!]Client: " + client->nick + " is already a member of channel: " + parameter, YELLOW_CMD);
 		//we have to check permmisions
-		// send ERR_INVITEONLYCHAN (473) or ERR_BANNEDFROMCHAN (474)
+		// send ERR_INVITEONLYCHAN (473)
 		else
 		{
 			addFileLog("[+]Client: " + client->nick + " joined channel: " + parameter, GREEN_CMD);
@@ -51,48 +56,39 @@ void    Commands::execPrivmsg( const std::string & parameter, Client * client, S
 {
 	std::string to, msg;
 	std::string::size_type space, colon;
+	Channel *   channel;
+	Client *    clientTo;
 
 	//maybe we have to do a function for this if there are another commands that need it.
 	space = parameter.find(" ");
 	colon = parameter.find(":");
 	if (space == std::string::npos || colon == std::string::npos)
 	{
-		std::cout << "Error parsing PRIVMSG.\n";
+		// not sure if is this the valid response
+		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("PRIVMSG").Trailer("Not enough parameters").Send();
 	}
 	else
 	{
-		Channel *   channel;
-		
 		to = parameter.substr(0, space);
 		msg = parameter.substr(colon + 1, parameter.size());
 		channel = server.getChannelByName(to);
-
-		if (channel)
+		if (!Channel::validName(to))
 		{
-			if (channel->isClient(client->nick))
-				Response::createMessage().From(*client).Command("PRIVMSG " + to + " " + msg).Broadcast(channel->clients, false);
-			else
-			{
-				//the client is not on the channel
-				std::cout << client->nick << " is not in " << channel->name << " can't send messages.\n";
-			}
-		}
-		//check if is a client. it will be better wen implemented the checker for valid names for nick and channels
-		// if start with # it's a channel, else a user.
-		else
-		{
-			Client *    clientTo;
-			
 			clientTo = server.getClientByNick(to);
 			if (clientTo)
 				Response::createMessage().From(*client).To(*clientTo).Command("PRIVMSG " + to).Trailer(msg).Send();
 			else
-			{
-				//the client don't exist
-				// check if we have to send a RPL
-				std::cout << to << " client don't exist.\n";
-			}
+				Response::createReply(ERR_NOSUCHNICK).From(server).To(*client).Command(to).Trailer("No such nick/channel").Send();
 		}
+		else if (channel)
+		{
+			if (channel->isClient(client->nick))
+				Response::createMessage().From(*client).Command("PRIVMSG " + to + " " + msg).Broadcast(channel->clients, false);
+			else
+				Response::createReply(ERR_CANNOTSENDTOCHAN).From(server).To(*client).Command(to).Trailer("Cannot send to channel").Send();
+		}
+		else
+			Response::createReply(ERR_NOSUCHCHANNEL).From(server).To(*client).Command(to).Trailer("No such channel").Send();
 	}
 }
 
@@ -157,12 +153,13 @@ void	Commands::execPart( const std::string & parameter, Client * client, Server 
 
 	space = parameter.find(" ");
 	colon = parameter.find(":");
-	if (parameter == "" || parameter[0] != '#' || !parameter[1] || space == std::string::npos || colon == std::string::npos)
+	if (space == std::string::npos || !Channel::validName(parameter.substr(0, space)))
 		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("PART").Trailer("Not enough parameters").Send();
 	else
 	{
 		name = parameter.substr(0, space);
-		reason = parameter.substr(colon + 1, parameter.size());
+		if (colon != std::string::npos)
+			reason = parameter.substr(colon + 1, parameter.size());
 		channel = server.getChannelByName(name);
 		if (!channel)
 			Response::createReply(ERR_NOSUCHCHANNEL).From(server).To(*client).Command(name).Trailer("No such channel").Send();

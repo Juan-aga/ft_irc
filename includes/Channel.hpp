@@ -30,9 +30,10 @@ class Channel
 		Channel( std::string const & name, Client * client, Server const & server );
 		~Channel( void );
 		
+		static bool	validName( std::string const & name );
 		bool	addClient( Client * client, Server const & server );
 		bool	delClient( Client * client, Server & server );
 		bool	isClient( std::string const & nick );
-		
+
 		std::string							getNamereply( void );
 };
