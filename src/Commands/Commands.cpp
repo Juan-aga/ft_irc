@@ -13,6 +13,7 @@ Commands::Commands( void )
 	commandMap["KILLSERVER"] = KILLSERVER;
 	commandMap["TOPIC"] = TOPIC;
 	commandMap["PART"] = PART;
+	commandMap["KICK"] = KICK;
 
 	commands[CAP].exec = &execCap;
 	commands[PASS].exec = &execPass;
@@ -24,6 +25,7 @@ Commands::Commands( void )
 	commands[KILLSERVER].exec = &execKill;
 	commands[TOPIC].exec = &execTopic;
 	commands[PART].exec = &execPart;
+	commands[KICK].exec = &execKick;
 }
 
 Commands::~Commands( void )

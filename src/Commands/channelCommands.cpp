@@ -78,7 +78,7 @@ void    Commands::execPrivmsg( const std::string & parameter, Client * client, S
 			if (clientTo)
 				Response::createMessage().From(*client).To(*clientTo).Command("PRIVMSG " + to).Trailer(msg).Send();
 			else
-				Response::createReply(ERR_NOSUCHNICK).From(server).To(*client).Command(to).Trailer("No such nick/channel").Send();
+				Response::createReply(ERR_NOSUCHNICK).From(server).To(*client).Command(to).Trailer("No such nick").Send();
 		}
 		else if (channel)
 		{
@@ -171,5 +171,55 @@ void	Commands::execPart( const std::string & parameter, Client * client, Server 
 		}
 		else
 			Response::createReply(ERR_NOTONCHANNEL).From(server).To(*client).Command(name).Trailer("You're not on that channel").Send();
+	}
+}
+
+void	Commands::execKick( const std::string & parameter, Client * client, Server & server )
+{
+	std::string from, kick, reason;
+	std::string::size_type firstSpace, secondSpace, colon;
+	Channel *	channel;
+	Client *	clientToKick;
+	
+	firstSpace = parameter.find(" ");
+	secondSpace = parameter.find(" ", firstSpace + 1);
+	std::cout << "first: " << firstSpace << " second " << secondSpace << std::endl;
+	colon = parameter.find(":");
+	reason = "Has been kicked by " + client->nick;
+	if (firstSpace == std::string::npos || secondSpace == std::string::npos)
+		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("KICK").Trailer("Not enough parameters").Send();
+	else
+	{
+		from = parameter.substr(0, firstSpace);
+		kick = parameter.substr(firstSpace + 1, secondSpace - firstSpace - 1);
+		std::cout << "To kick " + kick << std::endl;
+		channel = server.getChannelByName(from);
+		if (colon != std::string::npos)
+			reason = parameter.substr(colon + 1, parameter.size());
+		if (!Channel::validName(from))
+			Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("KICK").Trailer("Not enough parameters").Send();
+		else if (channel)
+		{
+			clientToKick = server.getClientByNick(kick);
+			if (!channel->isClient(client->nick))
+				Response::createReply(ERR_NOTONCHANNEL).From(server).To(*client).Command(channel->name).Trailer("You're not on that channel").Send();
+			else if (client->channels[channel] != "@")
+				Response::createReply(ERR_CHANOPRIVSNEEDED).From(server).To(*client).Command(from).Trailer("You're not channel operator").Send();
+			else if (!clientToKick)
+				Response::createReply(ERR_NOSUCHNICK).From(server).To(*client).Command(kick).Trailer("No such nick").Send();
+			else
+			{
+				if (channel->isClient(kick))
+				{
+					Response::createMessage().From(*client).To(*clientToKick).Command("KICK " + from + " " + kick).Trailer(reason).Broadcast(channel->clients, true);
+					channel->delClient(clientToKick, server);
+					clientToKick->channels.erase(channel);
+				}
+				else
+					Response::createReply(ERR_USERNOTINCHANNEL).From(server).To(*client).Command(kick + " " + channel->name).Trailer("They aren't on that channel").Send();
+			}
+		}
+		else
+			Response::createReply(ERR_NOSUCHCHANNEL).From(server).To(*client).Command(from).Trailer("No such channel").Send();
 	}
 }
