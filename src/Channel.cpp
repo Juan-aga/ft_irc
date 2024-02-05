@@ -14,6 +14,11 @@ Channel::Channel( std::string const & name, Client * client, Server const & serv
     std::string msg;
 
 	this->topic = "";
+	this->password = "";
+	this->clientLimit = 0;
+	this ->isFull = false;
+	this->inviteOnly = false;
+	this->opTopic = false;
 	client->channels[this] = "@";
 	clients.push_back(client);
 	Server::numChannels += 1;

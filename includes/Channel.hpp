@@ -13,19 +13,26 @@ class Client;
 class Channel
 {
 	private:
-		int			_numClients;
+		int			_numClients;		
 
 	public:
 		static int	totalCount;
 
 		std::string	name;
 		std::string	topic;
+		std::string password;
 		std::vector< Client *>	clients;
+		int	clientLimit;
 		//std::map< Client * , std::string >	clients;
 		//the chanel must have more options...
 
 		//we need to add topic and RPL_TOPIC (332) when add user.
 		
+		bool isFull;
+		bool inviteOnly;
+		bool opTopic;
+		
+		std::vector< Client *>	inviteList;
 		Channel( void );
 		Channel( std::string const & name, Client * client, Server const & server );
 		~Channel( void );

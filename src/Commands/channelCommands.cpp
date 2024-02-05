@@ -35,38 +35,64 @@ static std::vector<std::string> splitString(const std::string& input, char delim
 	return parts;
 }
 
-void		Commands::execMode(const std::string & parameter, Client & client, Server & server)
+// static int 	ft_isnumber(const std::string & num)
+// {
+// 	for (size_t i = 0; i < num.size(); i++)
+// 	{
+// 		if (!isdigit(num[i]))
+// 			return 0;
+// 	}
+// 	return 1;
+// }
+
+
+
+void		Commands::execMode(const std::string & parameter, Client * client, Server & server)
 {
 	std::vector<std::string> parameters;
 	parameters.push_back(parameter);
 	(void)client;
 	(void)server;
 	// (void)parameter;
-	
+	std::cout << parameter << std::endl;
 	parameters = splitString(parameter, ' ');
-	if (parameters[0] == client.nick)
+	if (parameters[0] == client->nick)
 	{
 		std::cout << "server MODE" << std::endl;
 		//server MODE
 	}
 	else if (parameters[0][0] == '#') //
 	{
-		std::cout << "channel MODE" << std::endl;
-		if ((parameters[1].size() == 2 && parameters[1][0] == '+'))
+		if (!server.getChannelByName(parameters[0])->validName(parameters[0]) || server.getChannelByName(parameters[0]) == NULL)
+			Response::createReply(ERR_NOSUCHCHANNEL).From(server).To(*client).Command("MODE").Trailer("Not such channel").Send();
+		else if (parameter[1] && (parameters[1].size() == 2 && parameters[1][0] == '+'))
 		{
 			if (parameters[1] == "+i")
-				std::cout << "channel MODE invite only" << std::endl;
+			{
+				//std::cout << "channel MODE invite only" << std::endl;
+				server.getChannelByName(parameters[0])->inviteOnly = true;
+				// Response::createMessage().From(*client).Command("MODE invite only channel").Broadcast(server.getChannelByName(parameters[0])->clients, true);
+			}
 			else if (parameters[1] == "+t")
-				std::cout << "channel MODE protected topic" << std::endl;
+			{
+				// std::cout << "channel MODE protected topic" << std::endl;
+				server.getChannelByName(parameters[0])->opTopic = true;
+			}
 			else if (parameters[1] == "+k")
-				std::cout << "channel MODE key channel" << std::endl;
+			{
+				if (parameters[2] == "")
+					Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("MODE").Trailer("Need more params").Send();
+				else
+				{
+					server.getChannelByName(parameters[0])->password = parameters[2];
+				}
+			}
 			else if (parameters[1] == "+l")
 				std::cout << "channel MODE limit client" << std::endl;
 			else
 				std::cout << "channel MODE error" << std::endl;
-			
+			std::cout << "channel MODE flag " << parameters[1] << std::endl;
 		}
-			std::cout << "channel MODE parameter" << parameters[1] << std::endl;
 		//chanel MODE
 	}
 	else

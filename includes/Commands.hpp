@@ -58,7 +58,7 @@ class Commands
 		static void execKick( const std::string & parameter, Client * client, Server & server );
 		
 		static void execKill( const std::string & parameter, Client * client, Server & server );
-		static void	execMode(const std::string & parameter, Client & client, Server & server);
+		static void	execMode(const std::string & parameter, Client * client, Server & server);
 		
 	public:
 		Commands( void );
