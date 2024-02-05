@@ -113,9 +113,7 @@ void Response::Broadcast(std::vector<Client *> clients, bool self) {
 	for (it = clients.begin(); it != clients.end(); it++)
 	{
 		if (!self && (*it)->nick == this->from)
-		{
 			continue;
-		}
 
 		this->To(*(*it)).Send();
 	}
