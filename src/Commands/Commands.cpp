@@ -81,6 +81,8 @@ void    Commands::processInput( const std::string & input, Client * client, Serv
 			if (DEBUG)
 				std::cout << "Client: " << client->nick << " failed to connect from FD: " << client->fd << std::endl;
 		}
+		else
+			server.channels[0]->addClient(client, server);
 	}
 }
 

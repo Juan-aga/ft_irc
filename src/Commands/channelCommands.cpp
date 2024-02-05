@@ -132,10 +132,15 @@ void	Commands::execTopic( const std::string & parameter, Client * client, Server
 		if (channel->isClient(client->nick))
 		{
 			//add here the check for the permissions to change the topic if you are the operator
-			channel->topic = tokens[1];
-			Response::createMessage().From(*client).Command("TOPIC " + channel->name + " :" + channel->topic).Broadcast(channel->clients, false);
-			Response::createReply(RPL_TOPIC).From(server).To(*client).Command(channel->name).Trailer(channel->topic).Send();
-			addFileLog("[+]Client: " + client->nick + " changed topic of channel: " + channel->name + " to: " + channel->topic, GREEN_CMD);
+			if (client->channels[channel] == "@")
+			{
+				channel->topic = tokens[1];
+				Response::createMessage().From(*client).Command("TOPIC " + channel->name + " :" + channel->topic).Broadcast(channel->clients, false);
+				Response::createReply(RPL_TOPIC).From(server).To(*client).Command(channel->name).Trailer(channel->topic).Send();
+				addFileLog("[+]Client: " + client->nick + " changed topic of channel: " + channel->name + " to: " + channel->topic, GREEN_CMD);
+			}
+			else
+				Response::createReply(ERR_CHANOPRIVSNEEDED).From(server).To(*client).Command(channel->name).Trailer("You're not channel operator").Send();
 		}
 		else
 		{

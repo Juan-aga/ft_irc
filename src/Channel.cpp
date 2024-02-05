@@ -4,9 +4,9 @@
 
 int Channel::totalCount = 0;
 
-Channel::Channel( void ): name("")
+Channel::Channel( void ): _numClients(1), name("#general"), topic("This is the general channel.")
 {
-
+	Server::numChannels += 1;
 }
 
 Channel::Channel( std::string const & name, Client * client, Server const & server ): _numClients(1), name(name)
