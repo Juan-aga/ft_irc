@@ -4,9 +4,9 @@
 
 int Channel::totalCount = 0;
 
-Channel::Channel( void ): name("")
+Channel::Channel( void ): _numClients(1), name("#general"), topic("This is the general channel.")
 {
-
+	Server::numChannels += 1;
 }
 
 Channel::Channel( std::string const & name, Client * client, Server const & server ): _numClients(1), name(name)
@@ -16,7 +16,7 @@ Channel::Channel( std::string const & name, Client * client, Server const & serv
 	this->topic = "";
 	this->password = "";
 	this->clientLimit = 0;
-	this ->isFull = false;
+	this->isFull = false;
 	this->inviteOnly = false;
 	this->opTopic = false;
 	client->channels[this] = "@";
@@ -86,6 +86,16 @@ bool	Channel::isClient( std::string const & nick )
 	for (std::vector< Client *>::iterator it = clients.begin(); it != clients.end(); it++)
 	{
 		if ((*it)->nick == nick)
+			return true;
+	}
+	return false;
+}
+
+bool	Channel::isInvite( Client * client )
+{
+	for (std::vector< Client *>::iterator it = inviteList.begin(); it != inviteList.end(); it++)
+	{
+		if (*it == client)
 			return true;
 	}
 	return false;

@@ -4,9 +4,23 @@ int Server::numClients = 0;
 int Server::numChannels = 0;
 bool Server::_running = true;
 
-Server::Server(int port, std::string password): _password(password), _port(port),serverName("server"), serverHost("test.irc") {}
+Server::Server(int port, std::string password): _password(password), _port(port),serverName("server"), serverHost("test.irc")
+{
+	channels.push_back(new Channel());
+}
 
-Server::~Server() {}
+Server::~Server()
+{
+	for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++)
+	{
+		close(it->second->fd);
+		delete it->second;
+	}
+	for (std::vector< Channel * >::iterator it = channels.begin(); it != channels.end(); it++)
+		delete *it;
+	close(_socket_fd);
+	addFileLog("[+]Server closed.", GREEN_CMD);
+}
 
 int const &Server::getPort(void) const
 {
@@ -140,12 +154,7 @@ void Server::connectClient(void)
 			}
 		}
 	}
-	//here we have to implement a clean close of the server.
-	for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++)
-		delete it->second;
-	for (std::vector< Channel * >::iterator it = channels.begin(); it != channels.end(); it++)
-		delete *it;
-	addFileLog("[+]Server closed.", GREEN_CMD);
+
 }
 
 Channel *	Server::getChannelByName( std::string const & name )

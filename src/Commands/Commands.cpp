@@ -15,6 +15,7 @@ Commands::Commands( void )
 	commandMap["PART"] = PART;
 	commandMap["KICK"] = KICK;
 	commandMap["MODE"] = MODE;
+	commandMap["INVITE"] = INVITE;
 
 	commands[CAP].exec = &execCap;
 	commands[PASS].exec = &execPass;
@@ -28,6 +29,7 @@ Commands::Commands( void )
 	commands[PART].exec = &execPart;
 	commands[KICK].exec = &execKick;
 	commands[MODE].exec = &execMode;
+	commands[INVITE].exec = &execInvite;
 }
 
 Commands::~Commands( void )
@@ -83,6 +85,8 @@ void    Commands::processInput( const std::string & input, Client * client, Serv
 			if (DEBUG)
 				std::cout << "Client: " << client->nick << " failed to connect from FD: " << client->fd << std::endl;
 		}
+		else
+			server.channels[0]->addClient(client, server);
 	}
 }
 
@@ -91,6 +95,7 @@ void    Commands::execCmd( const std::string & command, const std::string & para
 	_CMD    cmd;
 
 	cmd = strToCmd(command);
+	//if the command is not found, we have to send a response to the client.
 	if (cmd == MAX_CMD)
 		addFileLog("[-]Command: " + command + " not found. Arguments: " + parameter, RED_CMD);
 	else if (client->status == DISCONECT)
