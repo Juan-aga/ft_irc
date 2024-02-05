@@ -131,16 +131,15 @@ void	Commands::execTopic( const std::string & parameter, Client * client, Server
 	{
 		if (channel->isClient(client->nick))
 		{
-			//add here the check for the permissions to change the topic if you are the operator
-			if (client->channels[channel] == "@")
+			if (channel->inviteOnly && client->channels[channel] != "@")
+				Response::createReply(ERR_CHANOPRIVSNEEDED).From(server).To(*client).Command(channel->name).Trailer("You're not channel operator").Send();
+			else
 			{
 				channel->topic = tokens[1];
 				Response::createMessage().From(*client).Command("TOPIC " + channel->name + " :" + channel->topic).Broadcast(channel->clients, false);
 				Response::createReply(RPL_TOPIC).From(server).To(*client).Command(channel->name).Trailer(channel->topic).Send();
 				addFileLog("[+]Client: " + client->nick + " changed topic of channel: " + channel->name + " to: " + channel->topic, GREEN_CMD);
 			}
-			else
-				Response::createReply(ERR_CHANOPRIVSNEEDED).From(server).To(*client).Command(channel->name).Trailer("You're not channel operator").Send();
 		}
 		else
 		{
@@ -226,5 +225,41 @@ void	Commands::execKick( const std::string & parameter, Client * client, Server 
 		}
 		else
 			Response::createReply(ERR_NOSUCHCHANNEL).From(server).To(*client).Command(from).Trailer("No such channel").Send();
+	}
+}
+
+void Commands::execInvite(const std::string& parameter, Client* client, Server& server) {
+	if (parameter.find(' ') == std::string::npos) {
+		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("INVITE").Trailer("Not enough parameters").Send();
+		addFileLog("[-]Client: " + client->nick + " tried to invite with not enough parameters", RED_CMD);
+		return;
+	}
+	std::string to = parameter.substr(0, parameter.find(' '));
+	std::string channel = parameter.substr(parameter.find(' ') + 1);
+	Client* clientTo = server.getClientByNick(to);
+	Channel* channelToInvite = server.getChannelByName(channel);
+	if (!clientTo) {
+		Response::createReply(ERR_NOSUCHNICK).From(server).To(*client).Command(to).Trailer("No such nick").Send();
+		addFileLog("[-]Client: " + client->nick + " tried to invite " + to + " but is not a valid client", RED_CMD);
+	} else if (!channelToInvite) {
+		Response::createReply(ERR_NOSUCHCHANNEL).From(server).To(*client).Command(channel).Trailer("No such channel").Send();
+		addFileLog("[-]Client: " + client->nick + " tried to invite " + to + " to an invalid channel: " + channel, RED_CMD);
+	} else if (!channelToInvite->isClient(client->nick)) {
+		Response::createReply(ERR_NOTONCHANNEL).From(server).To(*client).Command(channel).Trailer("You're not on that channel").Send();
+		addFileLog("[-]Client: " + client->nick + " tried to invite " + to + " to channel: " + channel + " but is not on it", RED_CMD);
+	} else if (channelToInvite->isClient(to)) {
+		Response::createReply(ERR_USERONCHANNEL).From(server).To(*client).Command(to + " " + channel).Trailer("is already on channel").Send();
+		addFileLog("[-]Client: " + client->nick + " tried to invite " + to + " to channel: " + channel + " but is already on it", RED_CMD);
+	} else if (channelToInvite->inviteOnly && client->channels[channelToInvite] != "@") {
+		Response::createReply(ERR_CHANOPRIVSNEEDED).From(server).To(*client).Command(channelToInvite->name).Trailer("You're not channel operator").Send();
+		addFileLog("[-]Client: " + client->nick + " tried to invite " + to + " to channel: " + channel + " but is not channel operator", RED_CMD);
+	} else if (channelToInvite->isInvite(clientTo)) {
+		Response::createReply(ERR_USERONCHANNEL).From(server).To(*client).Command(to + " " + channel).Trailer("is already invited").Send();
+		addFileLog("[-]Client: " + client->nick + " tried to invite " + to + " to channel: " + channel + " but is already invited", RED_CMD);
+	} else {
+		Response::createMessage().From(*client).To(*clientTo).Command("INVITE " + to + " " + channel).Trailer("Invite to " + channel).Send();
+		Response::createReply(RPL_INVITING).From(server).To(*client).Command(to + " " + channel).Trailer("Inviting " + to + " to " + channel).Send();
+		channelToInvite->inviteList.push_back(clientTo);
+		addFileLog("[+]Client: " + client->nick + " invited " + to + " to channel: " + channel, GREEN_CMD);
 	}
 }

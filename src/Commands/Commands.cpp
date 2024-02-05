@@ -14,6 +14,7 @@ Commands::Commands( void )
 	commandMap["TOPIC"] = TOPIC;
 	commandMap["PART"] = PART;
 	commandMap["KICK"] = KICK;
+	commandMap["INVITE"] = INVITE;
 
 	commands[CAP].exec = &execCap;
 	commands[PASS].exec = &execPass;
@@ -26,6 +27,7 @@ Commands::Commands( void )
 	commands[TOPIC].exec = &execTopic;
 	commands[PART].exec = &execPart;
 	commands[KICK].exec = &execKick;
+	commands[INVITE].exec = &execInvite;
 }
 
 Commands::~Commands( void )
@@ -91,6 +93,7 @@ void    Commands::execCmd( const std::string & command, const std::string & para
 	_CMD    cmd;
 
 	cmd = strToCmd(command);
+	//if the command is not found, we have to send a response to the client.
 	if (cmd == MAX_CMD)
 		addFileLog("[-]Command: " + command + " not found. Arguments: " + parameter, RED_CMD);
 	else if (client->status == DISCONECT)

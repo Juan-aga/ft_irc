@@ -14,6 +14,9 @@ Channel::Channel( std::string const & name, Client * client, Server const & serv
     std::string msg;
 
 	this->topic = "";
+	this->isFull = false;
+	this->inviteOnly = false;
+	this->opTopic = false;
 	client->channels[this] = "@";
 	clients.push_back(client);
 	Server::numChannels += 1;
@@ -81,6 +84,16 @@ bool	Channel::isClient( std::string const & nick )
 	for (std::vector< Client *>::iterator it = clients.begin(); it != clients.end(); it++)
 	{
 		if ((*it)->nick == nick)
+			return true;
+	}
+	return false;
+}
+
+bool	Channel::isInvite( Client * client )
+{
+	for (std::vector< Client *>::iterator it = inviteList.begin(); it != inviteList.end(); it++)
+	{
+		if (*it == client)
 			return true;
 	}
 	return false;
