@@ -18,7 +18,7 @@ Client::Client( Client const & cli )
 	}
 }
 
-Client::~Client(void) 
+Client::~Client(void)
 {
 	Server::numClients -= 1;
 	//std::cout << "Client destructor called.\n";
