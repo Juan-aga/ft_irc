@@ -1,5 +1,8 @@
 #include "Commands.hpp"
 #include "Server.hpp"
+#include <cstddef>
+#include <iostream>
+#include <string>
 
 //Operators commands:
 //	KICK
@@ -16,11 +19,10 @@
 //clients mode only:
 //  Operator:	prefix @		+o
 //  regular :	prefix +		+v
-
 void        Commands::execJoin( const std::string & parameter, Client * client, Server & server )
 {
 	Channel *   channel;
-	
+
 	channel = server.getChannelByName(parameter);
 	// If parameter is "0", the client leave all channels. execute PART for every channel.
 	if (parameter.size() == 1 && parameter[0] == '0')
@@ -36,9 +38,20 @@ void        Commands::execJoin( const std::string & parameter, Client * client, 
 	else if (channel)
 	{
 		if (channel->isClient(client->nick))
+		{
+			Response::createReply(ERR_USERONCHANNEL).From(server).To(*client).Command(parameter).Trailer("is already on channel").Send();
 			addFileLog("[!]Client: " + client->nick + " is already a member of channel: " + parameter, YELLOW_CMD);
-		//we have to check permmisions
-		// send ERR_INVITEONLYCHAN (473)
+		}
+		else if (channel->inviteOnly && !channel->isInvite(client))
+		{
+			Response::createReply(ERR_INVITEONLYCHAN).From(server).To(*client).Command(parameter).Trailer("Cannot join channel (Invite only)").Send();
+			addFileLog("[-]Client: " + client->nick + " tried to join channel: " + parameter + " but is invite only", RED_CMD);
+		}
+		else if (channel->clientLimit > 0 && static_cast<int>(channel->clients.size()) >= channel->clientLimit)
+		{
+			Response::createReply(ERR_CHANNELISFULL).From(server).To(*client).Command(parameter).Trailer("Cannot join channel (Channel is full)").Send();
+			addFileLog("[-]Client: " + client->nick + " tried to join channel: " + parameter + " but is full", RED_CMD);
+		}
 		else
 		{
 			addFileLog("[+]Client: " + client->nick + " joined channel: " + parameter, GREEN_CMD);
@@ -92,6 +105,23 @@ void    Commands::execPrivmsg( const std::string & parameter, Client * client, S
 	}
 }
 
+static std::vector<std::string> splitString(const std::string& input, char delimiter) {
+	std::vector<std::string> parts;
+
+	size_t pos = 0;
+	std::string token;
+	std::string str = input;
+
+	while ((pos = str.find(delimiter)) != std::string::npos) {
+		token = str.substr(0, pos);
+		parts.push_back(token);
+		str.erase(0, pos + 1);
+	}
+	parts.push_back(str);
+
+	return parts;
+}
+
 static std::vector<std::string> splitTopic(const std::string& str)
 {
 	std::vector<std::string> tokens;
@@ -131,16 +161,15 @@ void	Commands::execTopic( const std::string & parameter, Client * client, Server
 	{
 		if (channel->isClient(client->nick))
 		{
-			//add here the check for the permissions to change the topic if you are the operator
-			if (client->channels[channel] == "@")
+			if (channel->inviteOnly && client->channels[channel] != "@")
+				Response::createReply(ERR_CHANOPRIVSNEEDED).From(server).To(*client).Command(channel->name).Trailer("You're not channel operator").Send();
+			else
 			{
 				channel->topic = tokens[1];
 				Response::createMessage().From(*client).Command("TOPIC " + channel->name + " :" + channel->topic).Broadcast(channel->clients, false);
 				Response::createReply(RPL_TOPIC).From(server).To(*client).Command(channel->name).Trailer(channel->topic).Send();
 				addFileLog("[+]Client: " + client->nick + " changed topic of channel: " + channel->name + " to: " + channel->topic, GREEN_CMD);
 			}
-			else
-				Response::createReply(ERR_CHANOPRIVSNEEDED).From(server).To(*client).Command(channel->name).Trailer("You're not channel operator").Send();
 		}
 		else
 		{
@@ -149,6 +178,162 @@ void	Commands::execTopic( const std::string & parameter, Client * client, Server
 		}
 	}
 }
+
+
+void		Commands::execMode(const std::string & parameter, Client * client, Server & server)
+{
+	std::vector<std::string> parameters;
+	Channel *channel;
+	Client *client;
+	parameters.push_back(parameter);
+	if (parameter.empty())
+	{
+		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("MODE").Trailer("Not enough parameters").Send();
+		return ;
+	}
+	parameters = splitString(parameter, ' ');
+	if (parameters[0][0] == '#') //
+	{
+		channel = server.getChannelByName(parameters[0]);
+		if (!Channel->validName(parameters[0]) || Channel == NULL)
+			Response::createReply(ERR_NOSUCHCHANNEL).From(server).To(*client).Command("MODE").Trailer("Not such channel").Send();
+		else if (parameter[1] && (parameters[1].size() == 2 && parameters[1][0] == '+'))
+		{
+			if (parameters[1] == "+i")
+			{
+				server.getChannelByName(parameters[0])->inviteOnly = true;
+				Response::createMessage().From(*client).Command("MODE " + server.getChannelByName(parameters[0])->name + " +i").Broadcast(server.getChannelByName(parameters[0])->clients, true);
+				std::cout << "channel MODE inviteOnly " << server.getChannelByName(parameters[0])->inviteOnly << std::endl;
+			}
+			else if (parameters[1] == "+t")
+			{
+				server.getChannelByName(parameters[0])->opTopic = true;
+				Response::createMessage().From(*client).Command("MODE " + server.getChannelByName(parameters[0])->name + " +t").Broadcast(server.getChannelByName(parameters[0])->clients, true);
+				std::cout << "channel MODE inviteOnly " << server.getChannelByName(parameters[0])->inviteOnly << std::endl;
+			}
+			else if (parameters[1] == "+k")
+			{
+				if (parameters[2] == "")
+				{
+					Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("MODE").Trailer("Need more params").Send();
+				}
+				else
+				{
+					server.getChannelByName(parameters[0])->password = parameters[2];
+					Response::createMessage().From(*client).Command("MODE " + server.getChannelByName(parameters[0])->name + " +k " + server.getChannelByName(parameters[0])->password).Broadcast(server.getChannelByName(parameters[0])->clients, true);
+					std::cout << "channel MODE password " << server.getChannelByName(parameters[0])->password << std::endl;
+				}
+			}
+			else if (parameters[1] == "+l")
+			{
+				//std::cout << "channel MODE limit client" << std::endl;
+				if (parameters[2] == "")
+					Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("MODE").Trailer("Need more params").Send();
+				else
+				{
+					server.getChannelByName(parameters[0])->clientLimit = std::atoi(parameters[2].c_str());
+					Response::createMessage().From(*client).Command("MODE " + server.getChannelByName(parameters[0])->name + " +l " + parameters[2]).Broadcast(server.getChannelByName(parameters[0])->clients, true);
+					std::cout << "channel MODE limit " << server.getChannelByName(parameters[0])->clientLimit << std::endl;
+				}
+			}
+			else if (parameters[1] == "+o")
+			{
+				//std::cout << "channel MODE limit client" << std::endl;
+				if (parameters[2] == "")
+					Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("MODE").Trailer("Need more params").Send();
+				else if (server.getClientByNick(parameters[2]) && server.getClientByNick(parameters[2])->channels[server.getChannelByName(parameters[0])] != "")
+				{
+					server.getClientByNick(parameters[2])->channels[server.getChannelByName(parameters[0])] = "@";
+					Response::createMessage().From(*client).Command("MODE " + server.getChannelByName(parameters[0])->name + " +o " + parameters[2]).Broadcast(server.getChannelByName(parameters[0])->clients, true);
+				}
+				else
+					Response::createReply(ERR_USERSDONTMATCH).From(server).To(*client).Command("MODE").Trailer("Users don't match").Send();
+			}
+			else
+				std::cout << "channel MODE error" << std::endl;
+			std::cout << "channel MODE flag " << parameters[1] << std::endl;
+		}
+
+		//remove MODE
+		else if (parameter[1] && (parameters[1].size() == 2 && parameters[1][0] == '-'))
+		{
+			if (parameters[1] == "-i")
+			{
+				server.getChannelByName(parameters[0])->inviteOnly = false;
+				Response::createMessage().From(*client).Command("MODE " + server.getChannelByName(parameters[0])->name + " -i").Broadcast(server.getChannelByName(parameters[0])->clients, true);
+				std::cout << "channel MODE inviteOnly " << server.getChannelByName(parameters[0])->inviteOnly << std::endl;
+			}
+			else if (parameters[1] == "-t")
+			{
+				server.getChannelByName(parameters[0])->opTopic = false;
+				Response::createMessage().From(*client).Command("MODE " + server.getChannelByName(parameters[0])->name + " -t").Broadcast(server.getChannelByName(parameters[0])->clients, true);
+				std::cout << "channel MODE opTopic " << server.getChannelByName(parameters[0])->opTopic << std::endl;
+			}
+			else if (parameters[1] == "-k")
+			{
+				server.getChannelByName(parameters[0])->password = "";
+				std::cout << "channel MODE password " << server.getChannelByName(parameters[0])->password << std::endl;
+				Response::createMessage().From(*client).Command("MODE " + server.getChannelByName(parameters[0])->name + " -k").Broadcast(server.getChannelByName(parameters[0])->clients, true);
+			}
+			else if (parameters[1] == "-l")
+			{
+				server.getChannelByName(parameters[0])->clientLimit = 0;
+				Response::createMessage().From(*client).Command("MODE " + server.getChannelByName(parameters[0])->name + " -l").Broadcast(server.getChannelByName(parameters[0])->clients, true);
+				std::cout << "channel MODE limit client" << server.getChannelByName(parameters[0])->clientLimit << std::endl;
+			}
+			else if (parameters[1] == "-o")
+			{
+				server.getClientByNick(parameters[2])->channels[server.getChannelByName(parameters[0])] = "";
+				Response::createMessage().From(*client).Command("MODE " + server.getChannelByName(parameters[0])->name + " -o " + parameters[2]).Broadcast(server.getChannelByName(parameters[0])->clients, true);
+				std::cout << "channel MODE op client " << server.getClientByNick(parameters[2])->channels[server.getChannelByName(parameters[0])] << std::endl;
+			}
+			else
+				std::cout << "channel MODE error" << std::endl;
+			std::cout << "channel MODE flag " << parameters[1] << std::endl;
+		}
+		//chanel MODE
+	}
+	else
+		std::cout << "void MODE" << std::endl;
+	//std::cout << "[!]/MODE param1: " << parameters[1] << std::end
+}
+
+void Commands::execInvite(const std::string& parameter, Client* client, Server& server) {
+	if (parameter.find(' ') == std::string::npos) {
+		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("INVITE").Trailer("Not enough parameters").Send();
+		addFileLog("[-]Client: " + client->nick + " tried to invite with not enough parameters", RED_CMD);
+		return;
+	}
+	std::string to = parameter.substr(0, parameter.find(' '));
+	std::string channel = parameter.substr(parameter.find(' ') + 1);
+	Client* clientTo = server.getClientByNick(to);
+	Channel* channelToInvite = server.getChannelByName(channel);
+	if (!clientTo) {
+		Response::createReply(ERR_NOSUCHNICK).From(server).To(*client).Command(to).Trailer("No such nick").Send();
+		addFileLog("[-]Client: " + client->nick + " tried to invite " + to + " but is not a valid client", RED_CMD);
+	} else if (!channelToInvite) {
+		Response::createReply(ERR_NOSUCHCHANNEL).From(server).To(*client).Command(channel).Trailer("No such channel").Send();
+		addFileLog("[-]Client: " + client->nick + " tried to invite " + to + " to an invalid channel: " + channel, RED_CMD);
+	} else if (!channelToInvite->isClient(client->nick)) {
+		Response::createReply(ERR_NOTONCHANNEL).From(server).To(*client).Command(channel).Trailer("You're not on that channel").Send();
+		addFileLog("[-]Client: " + client->nick + " tried to invite " + to + " to channel: " + channel + " but is not on it", RED_CMD);
+	} else if (channelToInvite->isClient(to)) {
+		Response::createReply(ERR_USERONCHANNEL).From(server).To(*client).Command(to + " " + channel).Trailer("is already on channel").Send();
+		addFileLog("[-]Client: " + client->nick + " tried to invite " + to + " to channel: " + channel + " but is already on it", RED_CMD);
+	} else if (channelToInvite->inviteOnly && client->channels[channelToInvite] != "@") {
+		Response::createReply(ERR_CHANOPRIVSNEEDED).From(server).To(*client).Command(channelToInvite->name).Trailer("You're not channel operator").Send();
+		addFileLog("[-]Client: " + client->nick + " tried to invite " + to + " to channel: " + channel + " but is not channel operator", RED_CMD);
+	} else if (channelToInvite->isInvite(clientTo)) {
+		Response::createReply(ERR_USERONCHANNEL).From(server).To(*client).Command(to + " " + channel).Trailer("is already invited").Send();
+		addFileLog("[-]Client: " + client->nick + " tried to invite " + to + " to channel: " + channel + " but is already invited", RED_CMD);
+	} else {
+		Response::createMessage().From(*client).To(*clientTo).Command("INVITE " + to + " " + channel).Trailer("Invite to " + channel).Send();
+		Response::createReply(RPL_INVITING).From(server).To(*client).Command(to + " " + channel).Trailer("Inviting " + to + " to " + channel).Send();
+		channelToInvite->inviteList.push_back(clientTo);
+		addFileLog("[+]Client: " + client->nick + " invited " + to + " to channel: " + channel, GREEN_CMD);
+	}
+}
+
 
 void	Commands::execPart( const std::string & parameter, Client * client, Server & server )
 {
@@ -185,7 +370,7 @@ void	Commands::execKick( const std::string & parameter, Client * client, Server 
 	std::string::size_type firstSpace, secondSpace, colon;
 	Channel *	channel;
 	Client *	clientToKick;
-	
+
 	firstSpace = parameter.find(" ");
 	secondSpace = parameter.find(" ", firstSpace + 1);
 	std::cout << "first: " << firstSpace << " second " << secondSpace << std::endl;

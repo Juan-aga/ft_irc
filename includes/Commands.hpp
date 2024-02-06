@@ -15,6 +15,7 @@ class Commands
 			PASS,
 			//only AUTH
 			CAP,
+			WHO,
 			NICK,
 			USER,
 			QUIT,
@@ -24,9 +25,12 @@ class Commands
 			TOPIC,
 			PART,
 			KICK,
+			INVITE,
 			//to close the erver.
 			KILLSERVER,
-			MAX_CMD
+			//mode
+			MODE,
+			MAX_CMD	
 		};
 		typedef void (*cmdFunction)(const std::string &, Client *, Server &);
 		typedef struct s_commands
@@ -44,6 +48,7 @@ class Commands
 
 		//connection
 		static void execCap( const std::string & parameter, Client * client, Server & server );
+		static void execWho( const std::string & parameter, Client * client, Server & server );
 		static void execPass( const std::string & parameter, Client * client, Server & server );
 		static void execNick( const std::string & parameter, Client * client, Server & server );
 		static void execUser( const std::string & parameter, Client * client, Server & server );
@@ -54,8 +59,10 @@ class Commands
 		static void execTopic( const std::string & parameter, Client * client, Server & server );
 		static void execPart( const std::string & parameter, Client * client, Server & server );
 		static void execKick( const std::string & parameter, Client * client, Server & server );
+		static void execInvite( const std::string & parameter, Client * client, Server & server );
 		
 		static void execKill( const std::string & parameter, Client * client, Server & server );
+		static void	execMode(const std::string & parameter, Client * client, Server & server);
 		
 	public:
 		Commands( void );

@@ -57,7 +57,7 @@ else
 endif
 
 ifndef	ARG
-		ARG	=	
+		ARG	=
 endif
 
 all: credit ${NAME}
