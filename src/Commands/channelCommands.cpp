@@ -112,12 +112,14 @@ static std::vector<std::string> splitString(const std::string& input, char delim
 	std::string token;
 	std::string str = input;
 
-	while ((pos = str.find(delimiter)) != std::string::npos) {
+	pos = str.find(delimiter);
+	while (pos != std::string::npos) {
 		token = str.substr(0, pos);
 		parts.push_back(token);
 		str.erase(0, pos + 1);
+		pos = str.find(delimiter);
 	}
-	parts.push_back(str);
+	parts.push_back(str.substr());
 
 	return parts;
 }
@@ -184,18 +186,19 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 {
 	std::vector<std::string> parameters;
 	Channel *channel;
-	Client *client;
-	parameters.push_back(parameter);
+	//Client *client;
+
+	//parameters.push_back(parameter);
 	if (parameter.empty())
 	{
 		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("MODE").Trailer("Not enough parameters").Send();
 		return ;
 	}
 	parameters = splitString(parameter, ' ');
-	if (parameters[0][0] == '#') //
+	if (parameters[0][0] == '#' && parameters.size() > 1) //
 	{
 		channel = server.getChannelByName(parameters[0]);
-		if (!Channel->validName(parameters[0]) || Channel == NULL)
+		if (!Channel::validName(parameters[0]) || channel == NULL)
 			Response::createReply(ERR_NOSUCHCHANNEL).From(server).To(*client).Command("MODE").Trailer("Not such channel").Send();
 		else if (parameter[1] && (parameters[1].size() == 2 && parameters[1][0] == '+'))
 		{
@@ -294,7 +297,12 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 		//chanel MODE
 	}
 	else
+	{
 		std::cout << "void MODE" << std::endl;
+		std::cout << "param: " << parameter << "\nParameters: ";
+		for (size_t i = 0; i < parameters.size(); i++) 
+			std::cout << " " << parameters[i] << std::endl;
+	}
 	//std::cout << "[!]/MODE param1: " << parameters[1] << std::end
 }
 
