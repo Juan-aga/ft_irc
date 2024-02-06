@@ -119,7 +119,8 @@ static std::vector<std::string> splitString(const std::string& input, char delim
 		str.erase(0, pos + 1);
 		pos = str.find(delimiter);
 	}
-	parts.push_back(str.substr());
+	if (!str.empty())
+		parts.push_back(str.substr());
 
 	return parts;
 }
@@ -195,7 +196,8 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 		return ;
 	}
 	parameters = splitString(parameter, ' ');
-	if (parameters[0][0] == '#' && parameters.size() > 1) //
+	//we have to implement response for only <channel>. we have to return <server> <CODE 324> <client> <channel> <modestring (+iktl)> 
+	if (parameters[0][0] == '#' && parameters.size() > 1) // there is <cahnnel> <modestring>
 	{
 		channel = server.getChannelByName(parameters[0]);
 		if (!Channel::validName(parameters[0]) || channel == NULL)
