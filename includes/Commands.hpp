@@ -15,6 +15,7 @@ class Commands
 			PASS,
 			//only AUTH
 			CAP,
+			WHO,
 			NICK,
 			USER,
 			QUIT,
@@ -47,6 +48,7 @@ class Commands
 
 		//connection
 		static void execCap( const std::string & parameter, Client * client, Server & server );
+		static void execWho( const std::string & parameter, Client * client, Server & server );
 		static void execPass( const std::string & parameter, Client * client, Server & server );
 		static void execNick( const std::string & parameter, Client * client, Server & server );
 		static void execUser( const std::string & parameter, Client * client, Server & server );

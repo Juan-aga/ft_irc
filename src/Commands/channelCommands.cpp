@@ -37,9 +37,20 @@ void        Commands::execJoin( const std::string & parameter, Client * client, 
 	else if (channel)
 	{
 		if (channel->isClient(client->nick))
+		{
+			Response::createReply(ERR_USERONCHANNEL).From(server).To(*client).Command(parameter).Trailer("is already on channel").Send();
 			addFileLog("[!]Client: " + client->nick + " is already a member of channel: " + parameter, YELLOW_CMD);
-		//we have to check permmisions
-		// send ERR_INVITEONLYCHAN (473)
+		}
+		else if (channel->inviteOnly && !channel->isInvite(client))
+		{
+			Response::createReply(ERR_INVITEONLYCHAN).From(server).To(*client).Command(parameter).Trailer("Cannot join channel (Invite only)").Send();
+			addFileLog("[-]Client: " + client->nick + " tried to join channel: " + parameter + " but is invite only", RED_CMD);
+		}
+		else if (channel->clientLimit > 0 && static_cast<int>(channel->clients.size()) >= channel->clientLimit)
+		{
+			Response::createReply(ERR_CHANNELISFULL).From(server).To(*client).Command(parameter).Trailer("Cannot join channel (Channel is full)").Send();
+			addFileLog("[-]Client: " + client->nick + " tried to join channel: " + parameter + " but is full", RED_CMD);
+		}
 		else
 		{
 			addFileLog("[+]Client: " + client->nick + " joined channel: " + parameter, GREEN_CMD);

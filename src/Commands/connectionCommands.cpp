@@ -7,7 +7,16 @@ void        Commands::execCap( const std::string & parameter, Client * client, S
 	(void)parameter;
 	(void)client;
 	(void)server;
-	addFileLog("[-]Client from ip: " + client->ip + " trying CAP: " + parameter + ". Not supported.", RED_CMD);
+	addFileLog("[!]Client from ip: " + client->ip + " trying CAP: " + parameter + ". Not supported.", YELLOW_CMD);
+}
+
+void		Commands::execWho( const std::string & parameter, Client * client, Server & server )
+{
+	//we don't handle 
+	(void)parameter;
+	(void)client;
+	(void)server;
+	addFileLog("[!]Client from ip: " + client->ip + " trying WHO: " + parameter + ". Not supported.", YELLOW_CMD);
 }
 
 void        Commands::execPass( const std::string & parameter, Client * client, Server & server )
