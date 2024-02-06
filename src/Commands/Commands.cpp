@@ -16,6 +16,7 @@ Commands::Commands( void )
 	commandMap["KICK"] = KICK;
 	commandMap["MODE"] = MODE;
 	commandMap["INVITE"] = INVITE;
+	commandMap["WHO"] = WHO;
 
 	commands[CAP].exec = &execCap;
 	commands[PASS].exec = &execPass;
@@ -30,6 +31,7 @@ Commands::Commands( void )
 	commands[KICK].exec = &execKick;
 	commands[MODE].exec = &execMode;
 	commands[INVITE].exec = &execInvite;
+	commands[WHO].exec = &execWho;
 }
 
 Commands::~Commands( void )
@@ -97,7 +99,10 @@ void    Commands::execCmd( const std::string & command, const std::string & para
 	cmd = strToCmd(command);
 	//if the command is not found, we have to send a response to the client.
 	if (cmd == MAX_CMD)
+	{
+		Response::createReply(ERR_UNKNOWNCOMMAND).From(server).To(*client).Command(command).Trailer("Unknown command").Send();
 		addFileLog("[-]Command: " + command + " not found. Arguments: " + parameter, RED_CMD);
+	}
 	else if (client->status == DISCONECT)
 	//this is not "failed to connect", it was disconnected by the server.
 		addFileLog("[!]Client from ip: " + client->ip + " disconnected by the server", YELLOW_CMD);
