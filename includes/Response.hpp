@@ -25,7 +25,7 @@ enum	Code
 	ERR_NOSUCHCHANNEL = 403,
 	ERR_CANNOTSENDTOCHAN = 404,
 	ERR_NONICKNAMEGIVEN = 431,
-	ERR_ERRONEUSNICKNAME = 432, 
+	ERR_ERRONEUSNICKNAME = 432,
 	ERR_NICKNAMEINUSE = 433,
 	ERR_USERNOTINCHANNEL = 441,
 	ERR_NOTONCHANNEL = 442,
@@ -33,7 +33,8 @@ enum	Code
 	ERR_NEEDMOREPARAMS = 461,
 	ERR_ALREADYREGISTERED = 462,
 	ERR_PASSWDMISMATCH = 464,
-	ERR_CHANOPRIVSNEEDED = 482
+	ERR_CHANOPRIVSNEEDED = 482,
+	ERR_USERSDONTMATCH = 502
 };
 
 // the trailer is the post colon (:) message
@@ -59,10 +60,10 @@ class Response
 		Response();
 		~Response();
 
-		static Response createMessage(); 	
+		static Response createMessage();
 		static Response createReply(const Code &code);
 		Response& From(const Client &client);
-		Response& From(const Server & server);	
+		Response& From(const Server & server);
 		Response& To(const Client & client);
 		Response &	Command( const std::string & command );
 		Response& Trailer(const std::string &trailer);
