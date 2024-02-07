@@ -1,4 +1,4 @@
-#include "Commands.hpp"
+	#include "Commands.hpp"
 #include "Server.hpp"
 #include <cstddef>
 #include <iostream>
@@ -268,7 +268,7 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 				else
 				{
 					clientTo = server.getClientByNick(parameters[2]);
-					if (clientTo && clientTo->channels[channel] != "@")
+					if (clientTo && clientTo->channels[channel] != "@" && clientTo == client)
 					{
 						clientTo->channels[channel] = "@";
 						Response::createMessage().From(*client).Command("MODE " + channel->name + " +o " + clientTo->nick).Broadcast(channel->clients, true);
@@ -317,9 +317,17 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 			else if (parameters[1] == "-o")
 			{
 				clientTo = server.getClientByNick(parameters[2]);
-				clientTo->channels[channel] = "";
-				Response::createMessage().From(*client).Command("MODE " + channel->name + " -o " + clientTo->nick).Broadcast(channel->clients, true);
-				addFileLog("[+]Client: " + client->nick + " set client: " + clientTo->nick + " to no operator in channel: " + channel->name, GREEN_CMD);
+				if (clientTo != client)
+				{
+					clientTo->channels[channel] = "";
+					Response::createMessage().From(*client).Command("MODE " + channel->name + " -o " + clientTo->nick).Broadcast(channel->clients, true);
+					addFileLog("[+]Client: " + client->nick + " set client: " + clientTo->nick + " to no operator in channel: " + channel->name, GREEN_CMD);
+				}
+				else
+				{
+					Response::createReply(ERR_USERSDONTMATCH).From(server).To(*client).Command("MODE").Trailer("Users don't match").Send();
+					addFileLog("[-]Client: " + client->nick + " tried to set client: " + clientTo->nick + " to no operator in channel: " + channel->name + " But he cannot remove from itself", RED_CMD);
+				}
 			}
 			else
 			{
@@ -409,7 +417,10 @@ void	Commands::execKick( const std::string & parameter, Client * client, Server 
 	colon = parameter.find(":");
 	reason = "Has been kicked by " + client->nick;
 	if (firstSpace == std::string::npos || secondSpace == std::string::npos)
+	{
 		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("KICK").Trailer("Not enough parameters").Send();
+		addFileLog("[-]Client: " + client->nick + " tried to kick but not enough parameters", RED_CMD);
+	}
 	else
 	{
 		from = parameter.substr(0, firstSpace);
@@ -419,29 +430,48 @@ void	Commands::execKick( const std::string & parameter, Client * client, Server 
 		if (colon != std::string::npos)
 			reason = parameter.substr(colon + 1, parameter.size());
 		if (!Channel::validName(from))
+		{
 			Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("KICK").Trailer("Not enough parameters").Send();
+			addFileLog("[-]Client: " + client->nick + " tried to kick but not enough parameters", RED_CMD);
+		}
 		else if (channel)
 		{
 			clientToKick = server.getClientByNick(kick);
 			if (!channel->isClient(client->nick))
+			{
 				Response::createReply(ERR_NOTONCHANNEL).From(server).To(*client).Command(channel->name).Trailer("You're not on that channel").Send();
+				addFileLog("[-]Client: " + client->nick + " tried to kick but is not on that channel", RED_CMD);
+			}
 			else if (client->channels[channel] != "@")
+			{
 				Response::createReply(ERR_CHANOPRIVSNEEDED).From(server).To(*client).Command(from).Trailer("You're not channel operator").Send();
-			else if (!clientToKick)
+				addFileLog("[-]Client: " + client->nick + " tried to kick but is not channel operator", RED_CMD);
+			}
+			else if (!clientToKick || clientToKick == client)
+			{
 				Response::createReply(ERR_NOSUCHNICK).From(server).To(*client).Command(kick).Trailer("No such nick").Send();
+				addFileLog("[-]Client: " + client->nick + " tried to kick but no such nick or is kicking itself", RED_CMD);
+			}
 			else
 			{
 				if (channel->isClient(kick))
 				{
 					Response::createMessage().From(*client).To(*clientToKick).Command("KICK " + from + " " + kick).Trailer(reason).Broadcast(channel->clients, true);
+					addFileLog("[+]Client: " + client->nick + " kicked " + kick + " from channel: " + from, GREEN_CMD);
 					channel->delClient(clientToKick, server);
 					clientToKick->channels.erase(channel);
 				}
 				else
+				{
 					Response::createReply(ERR_USERNOTINCHANNEL).From(server).To(*client).Command(kick + " " + channel->name).Trailer("They aren't on that channel").Send();
+					addFileLog("[-]Client: " + client->nick + " tried to kick but " + kick + " is not on that channel", RED_CMD);
+				}
 			}
 		}
 		else
+		{
 			Response::createReply(ERR_NOSUCHCHANNEL).From(server).To(*client).Command(from).Trailer("No such channel").Send();
+			addFileLog("[-]Client: " + client->nick + " tried to kick but no such channel", RED_CMD);
+		}
 	}
 }
