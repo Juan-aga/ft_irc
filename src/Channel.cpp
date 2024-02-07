@@ -48,22 +48,27 @@ bool	Channel::validName( std::string const & name )
 	return true;
 }
 
-bool	Channel::addClient( Client * client, Server const & server )
+bool	Channel::addClient( Client * client, Server const & server, std::string const & password )
 {
     std::string msg;
 
-	client->channels[this] = "+";
-	clients.push_back(client);
-	_numClients += 1;
-	msg = getNamereply();
-	Response::createMessage().From(*client).Command("JOIN " + name).Broadcast(clients, true);
-	if (this->topic != "")
-		Response::createReply(RPL_TOPIC).From(server).To(*client).Command(name).Trailer(this->topic).Send();
-	else
-		Response::createReply(RPL_NOTOPIC).From(server).To(*client).Command(name).Trailer("No topic is set").Send();
-    Response::createReply(RPL_NAMREPLY).From(server).To(*client).Command("= " + name).Trailer(msg).Send();
-    Response::createReply(RPL_ENDOFNAMES).From(server).To(*client).Command(name).Trailer("End of name list.").Send();
-	return true;
+    if ((needPass && this->password == password) || !needPass)
+    {
+		client->channels[this] = "+";
+		clients.push_back(client);
+		_numClients += 1;
+		msg = getNamereply();
+		Response::createMessage().From(*client).Command("JOIN " + name).Broadcast(clients, true);
+		if (this->topic != "")
+			Response::createReply(RPL_TOPIC).From(server).To(*client).Command(name).Trailer(this->topic).Send();
+		else
+			Response::createReply(RPL_NOTOPIC).From(server).To(*client).Command(name).Trailer("No topic is set").Send();
+	    Response::createReply(RPL_NAMREPLY).From(server).To(*client).Command("= " + name).Trailer(msg).Send();
+	    Response::createReply(RPL_ENDOFNAMES).From(server).To(*client).Command(name).Trailer("End of name list.").Send();
+		return true;
+    }
+    // check error on password;
+    return false;
 }
 
 bool	Channel::delClient( Client * client, Server & server )

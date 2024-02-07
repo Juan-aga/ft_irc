@@ -13,7 +13,7 @@ class Client;
 class Channel
 {
 	private:
-		int			_numClients;		
+		int			_numClients;
 
 	public:
 		static int	totalCount;
@@ -36,9 +36,9 @@ class Channel
 		Channel( void );
 		Channel( std::string const & name, Client * client, Server const & server );
 		~Channel( void );
-		
+
 		static bool	validName( std::string const & name );
-		bool	addClient( Client * client, Server const & server );
+		bool	addClient( Client * client, Server const & server, std::string const & password );
 		bool	delClient( Client * client, Server & server );
 		bool	isClient( std::string const & nick );
 		bool	isInvite( Client * client );

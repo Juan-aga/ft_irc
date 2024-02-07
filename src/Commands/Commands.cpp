@@ -89,7 +89,7 @@ void    Commands::processInput( const std::string & input, Client * client, Serv
 		}
 		else if (client->status == CONNECTED)
 
-			server.channels[0]->addClient(client, server);
+			server.channels[0]->addClient(client, server, "");
 	}
 }
 

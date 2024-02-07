@@ -24,15 +24,21 @@
 void        Commands::execJoin( const std::string & parameter, Client * client, Server & server )
 {
 	Channel *   channel;
+	std::string::size_type space;
+	std::string	password = "";
 
-	channel = server.getChannelByName(parameter);
+	//maybe we have to do a function for this if there are another commands that need it.
+	space = parameter.find(" ");
+	channel = server.getChannelByName(parameter.substr(0, space));
+	if (space != std::string::npos)
+		password = parameter.substr(space + 1, parameter.size());
 	// If parameter is "0", the client leave all channels. execute PART for every channel.
 	if (parameter.size() == 1 && parameter[0] == '0')
 	{
 		for (std::map< Channel *, std::string >::iterator chan = client->channels.begin(); client->channels.size() > 0; chan = client->channels.begin())
 			execPart(chan->first->name + " " , client, server);
 	}
-	else if (!Channel::validName(parameter))
+	else if (!Channel::validName(parameter.substr(0, space)))
 	{
 		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("JOIN").Trailer("Not enough parameters").Send();
 		addFileLog("[-]Client: " + client->nick + " tried to join an invalid channel: " + parameter, RED_CMD);
@@ -56,8 +62,10 @@ void        Commands::execJoin( const std::string & parameter, Client * client, 
 		}
 		else
 		{
-			addFileLog("[+]Client: " + client->nick + " joined channel: " + parameter, GREEN_CMD);
-			channel->addClient(client, server);
+			if (channel->addClient(client, server, password))
+				addFileLog("[+]Client: " + client->nick + " joined channel: " + parameter, GREEN_CMD);
+			else
+				std::cout << "ERROR, pasword not match.\n";
 		}
 	}
 	else
