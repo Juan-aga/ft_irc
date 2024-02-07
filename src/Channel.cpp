@@ -26,7 +26,7 @@ Channel::Channel( std::string const & name, Client * client, Server const & serv
 	Server::numChannels += 1;
 	totalCount += 1;
 	msg = getNamereply();
-	Response::createMessage().From(*client).To(*client).Command("JOIN " + name + " " + client->channels[this]).Send();
+	Response::createMessage().From(*client).To(*client).Command("JOIN " + name).Send();
     Response::createReply(RPL_NAMREPLY).From(server).To(*client).Command("= " + name).Trailer(msg).Send();
     Response::createReply(RPL_ENDOFNAMES).From(server).To(*client).Command(name).Trailer("End of name list.").Send();
 }
@@ -56,7 +56,7 @@ bool	Channel::addClient( Client * client, Server const & server )
 	clients.push_back(client);
 	_numClients += 1;
 	msg = getNamereply();
-	Response::createMessage().From(*client).Command("JOIN " + name + " " + client->channels[this]).Broadcast(clients, true);
+	Response::createMessage().From(*client).Command("JOIN " + name).Broadcast(clients, true);
 	if (this->topic != "")
 		Response::createReply(RPL_TOPIC).From(server).To(*client).Command(name).Trailer(this->topic).Send();
 	else
