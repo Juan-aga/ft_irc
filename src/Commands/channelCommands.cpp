@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <sys/stdio.h>
+#include <sys/unistd.h>
 
 //Operators commands:
 //	KICK
@@ -165,7 +166,7 @@ void	Commands::execTopic( const std::string & parameter, Client * client, Server
 	{
 		if (channel->isClient(client->nick))
 		{
-			if (channel->inviteOnly && client->channels[channel] != "@")
+			if (channel->opTopic && client->channels[channel] != "@")
 				Response::createReply(ERR_CHANOPRIVSNEEDED).From(server).To(*client).Command(channel->name).Trailer("You're not channel operator").Send();
 			else
 			{
@@ -205,10 +206,14 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 		if (client->channels[channel] != "@")
 		{
 			Response::createReply(ERR_CHANOPRIVSNEEDED).From(server).To(*client).Command(parameters[0]).Trailer("You're not channel operator").Send();
+			addFileLog("[-]Client: " + client->nick + " tried to use mode on channel: " + parameters[0] + " but is not operator", RED_CMD);
 			return ;
 		}
 		else if (!channel->validName(parameters[0]) || !channel)
+		{
 			Response::createReply(ERR_NOSUCHCHANNEL).From(server).To(*client).Command("MODE").Trailer("Not such channel").Send();
+			addFileLog("[-]Client: " + client->nick + " tried to use mode on invalid channel: " + parameters[0], RED_CMD);
+		}
 		// else check the flags if exists
 		else if (parameter[1] && (parameters[1].size() == 2 && parameters[1][0] == '+'))
 		{
@@ -216,11 +221,13 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 			{
 				channel->inviteOnly = true;
 				Response::createMessage().From(*client).Command("MODE " + server.getChannelByName(parameters[0])->name + " +i").Broadcast(channel->clients, true);
+				addFileLog("[+]Client: " + client->nick + " set channel: " + channel->name + " to invite only", GREEN_CMD);
 			}
 			else if (parameters[1] == "+t")
 			{
 				channel->opTopic = true;
 				Response::createMessage().From(*client).Command("MODE " + channel->name + " +t").Broadcast(channel->clients, true);
+				addFileLog("[+]Client: " + client->nick + " set channel: " + channel->name + " to op topic", GREEN_CMD);
 			}
 			else if (parameters[1] == "+k")
 			{
@@ -228,35 +235,50 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 				{
 					channel->password = parameters[2];
 					Response::createMessage().From(*client).Command("MODE " + channel->name + " +k " + channel->password).Broadcast(channel->clients, true);
+					addFileLog("[+]Client: " + client->nick + " set channel: " + channel->name + " to password protected", GREEN_CMD);
 				}
 				else
+				{
 					Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("MODE").Trailer("Need more params").Send();
+					addFileLog("[-]Client: " + client->nick + " tried to set channel: " + channel->name + " to password protected but didn't provide password", RED_CMD);
+				}
 			}
 			else if (parameters[1] == "+l")
 			{
 				if (parameters[2] == "")
+				{
 					Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("MODE").Trailer("Need more params").Send();
+					addFileLog("[-]Client: " + client->nick + " tried to set channel: " + channel->name + " to limit but didn't provide limit", RED_CMD);
+				}
 				else
 				{
 					channel->clientLimit = std::atoi(parameters[2].c_str());
 					Response::createMessage().From(*client).Command("MODE " + channel->name + " +l " + parameters[2]).Broadcast(channel->clients, true);
+					addFileLog("[+]Client: " + client->nick + " set channel: " + channel->name + " to limit: " + parameters[2], GREEN_CMD);
 				}
 			}
 			else if (parameters[1] == "+o")
 			{
 				if (parameters[2] == "")
+				{
 					Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("MODE").Trailer("Need more params").Send();
+					addFileLog("[-]Client: " + client->nick + " tried to set channel: " + channel->name + " to limit but didn't provide limit", RED_CMD);
+				}
 				else
 				{
 					clientTo = server.getClientByNick(parameters[2]);
-					if (clientTo && clientTo->channels[channel] != "")
+					if (clientTo && clientTo->channels[channel] != "@")
 					{
 						clientTo->channels[channel] = "@";
 						std::cout << "clientTo->channels[channel] = " << clientTo->channels[channel] << std::endl;
 						Response::createMessage().From(*client).Command("MODE " + channel->name + " +o " + clientTo->nick).Broadcast(channel->clients, true);
+						addFileLog("[+]Client: " + client->nick + " set client: " + clientTo->nick + " to operator in channel: " + channel->name, GREEN_CMD);
 					}
 					else
+					{
 						Response::createReply(ERR_USERSDONTMATCH).From(server).To(*client).Command("MODE").Trailer("Users don't match").Send();
+						addFileLog("[-]Client: " + client->nick + " tried to set client: " + clientTo->nick + " to operator in channel: " + channel->name + " but client doesn't exist or is already operator", RED_CMD);
+					}
 				}
 
 			}
@@ -269,21 +291,25 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 			{
 				channel->inviteOnly = false;
 				Response::createMessage().From(*client).Command("MODE " + channel->name + " -i").Broadcast(channel->clients, true);
+				addFileLog("[+]Client: " + client->nick + " set channel: " + channel->name + " to invite only", GREEN_CMD);
 			}
 			else if (parameters[1] == "-t")
 			{
 				channel->opTopic = false;
 				Response::createMessage().From(*client).Command("MODE " + channel->name + " -t").Broadcast(channel->clients, true);
+				addFileLog("[+]Client: " + client->nick + " set channel: " + channel->name + " to op topic", GREEN_CMD);
 			}
 			else if (parameters[1] == "-k")
 			{
 				channel->password = "";
 				Response::createMessage().From(*client).Command("MODE " + channel->name + " -k").Broadcast(channel->clients, true);
+				addFileLog("[+]Client: " + client->nick + " set channel: " + channel->name + " to password protected", GREEN_CMD);
 			}
 			else if (parameters[1] == "-l")
 			{
 				channel->clientLimit = 0;
 				Response::createMessage().From(*client).Command("MODE " + channel->name + " -l").Broadcast(channel->clients, true);
+				addFileLog("[+]Client: " + client->nick + " set channel: " + channel->name + " to no limit", GREEN_CMD);
 			}
 			else if (parameters[1] == "-o")
 			{
@@ -291,9 +317,13 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 				clientTo->channels[channel] = "";
 				std::cout << "clientTo->channels[channel] = " << clientTo->channels[channel] << std::endl;
 				Response::createMessage().From(*client).Command("MODE " + channel->name + " -o " + clientTo->nick).Broadcast(channel->clients, true);
+				addFileLog("[+]Client: " + client->nick + " set client: " + clientTo->nick + " to no operator in channel: " + channel->name, GREEN_CMD);
 			}
 			else
+			{
 				Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("MODE").Trailer("Need more params").Send();
+				addFileLog("[-]Client: " + client->nick + " tried to set channel: " + channel->name + " to something but didn't provide enough parameters", RED_CMD);
+			}
 		}
 	}
 }

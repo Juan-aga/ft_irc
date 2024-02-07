@@ -11,6 +11,6 @@ bool addFileLog(std::string message, std::string color) {
 	}
 	file << time << " " << message << std::endl;
 	file.close();
-	//std::cout << getTime() << color << message << NOCOLOR_CMD << std::endl;
+	std::cout << time << color << message << NOCOLOR_CMD << std::endl;
 	return true;
 }
