@@ -113,12 +113,15 @@ static std::vector<std::string> splitString(const std::string& input, char delim
 	std::string token;
 	std::string str = input;
 
-	while ((pos = str.find(delimiter)) != std::string::npos) {
+	pos = str.find(delimiter);
+	while (pos != std::string::npos) {
 		token = str.substr(0, pos);
 		parts.push_back(token);
 		str.erase(0, pos + 1);
+		pos = str.find(delimiter);
 	}
-	parts.push_back(str);
+	if (!str.empty())
+		parts.push_back(str.substr());
 
 	return parts;
 }
@@ -194,7 +197,8 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 		return ;
 	}
 	parameters = splitString(parameter, ' ');
-	if (parameters[0][0] == '#')
+	//we have to implement response for only <channel>. we have to return <server> <CODE 324> <client> <channel> <modestring (+iktl)>
+	if (parameters[0][0] == '#' && parameters.size() > 1) // there is <cahnnel> <modestring>
 	{
 		channel = server.getChannelByName(parameters[0]);
 		// if channel doesn't exist send a ERR_NOSUCHCHANNEL
@@ -349,7 +353,7 @@ void	Commands::execPart( const std::string & parameter, Client * client, Server 
 			Response::createReply(ERR_NOSUCHCHANNEL).From(server).To(*client).Command(name).Trailer("No such channel").Send();
 		else if (channel->isClient(client->nick))
 		{
-			Response::createMessage().From(*client).Command("PART " + name).Trailer(reason).Broadcast(client->channels, true);
+			Response::createMessage().From(*client).Command("PART " + name).Trailer(reason).Broadcast(channel->clients, true);
 			channel->delClient(client, server);
 			client->channels.erase(channel);
 		}
