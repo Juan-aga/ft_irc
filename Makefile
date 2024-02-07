@@ -96,7 +96,7 @@ leaks: ${NAME}
 
 val: ${NAME}
 	@echo "$(B)Checking with valgrind...$(X)"
-	@valgrind ./${NAME} ${ARG}
+	@valgrind --leak-check=full --show-leak-kinds=all ./${NAME} ${ARG}
 
 credit:
 	@echo " ┏━━━┓┏━━━━┓    ┏━━┓┏━━━┓┏━━━┓"

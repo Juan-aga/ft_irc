@@ -106,11 +106,11 @@ void Server::readMesage(Client * client)
 		readBuffer.append(buffer);
 		if (readBuffer.find("\r\n"))
 		{
-			std::cout << "Readed: " << readBuffer << std::endl;
+			//std::cout << "Readed: " << readBuffer << std::endl;
 			break;
 		}
 	}
-	std::cout << "Readed to proccess: " << readBuffer << std::endl;
+	//std::cout << "Readed to proccess: " << readBuffer << std::endl;
 	_commands.processInput(readBuffer, client, *this);
 }
 

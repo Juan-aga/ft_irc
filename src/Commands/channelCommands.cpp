@@ -252,6 +252,7 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 					if (clientTo && clientTo->channels[channel] != "")
 					{
 						clientTo->channels[channel] = "@";
+						std::cout << "clientTo->channels[channel] = " << clientTo->channels[channel] << std::endl;
 						Response::createMessage().From(*client).Command("MODE " + channel->name + " +o " + clientTo->nick).Broadcast(channel->clients, true);
 					}
 					else
@@ -288,6 +289,7 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 			{
 				clientTo = server.getClientByNick(parameters[2]);
 				clientTo->channels[channel] = "";
+				std::cout << "clientTo->channels[channel] = " << clientTo->channels[channel] << std::endl;
 				Response::createMessage().From(*client).Command("MODE " + channel->name + " -o " + clientTo->nick).Broadcast(channel->clients, true);
 			}
 			else
