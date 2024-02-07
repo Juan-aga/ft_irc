@@ -26,10 +26,11 @@ class Channel
 		//std::map< Client * , std::string >	clients;
 		//the chanel must have more options...
 
-		//we need to add topic and RPL_TOPIC (332) when add user.
 		bool isFull;
 		bool inviteOnly;
 		bool opTopic;
+		bool needPass;
+		bool isLimited;
 
 		std::vector< Client *>	inviteList;
 		Channel( void );
@@ -43,4 +44,5 @@ class Channel
 		bool	isInvite( Client * client );
 
 		std::string							getNamereply( void );
+		std::string							getMode( void );
 };

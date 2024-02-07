@@ -19,6 +19,8 @@ Channel::Channel( std::string const & name, Client * client, Server const & serv
 	this->isFull = false;
 	this->inviteOnly = false;
 	this->opTopic = false;
+	this->needPass = false;
+	this->isLimited = false;
 	client->channels[this] = "@";
 	clients.push_back(client);
 	Server::numChannels += 1;
@@ -108,4 +110,19 @@ std::string							Channel::getNamereply( void )
 	for (std::vector< Client *>::iterator gclients = clients.begin(); gclients != clients.end(); gclients++)
 		msg += (*gclients)->channels[this] + (*gclients)->nick + " ";
 	return msg;
+}
+
+std::string							Channel::getMode( void )
+{
+	std::string	mode = "";
+
+	if (this->isLimited)
+		mode += "l";
+	if (this->inviteOnly)
+		mode += "i";
+	if (this->opTopic)
+		mode += "t";
+	if (this->needPass)
+		mode += "k";
+	return mode;
 }
