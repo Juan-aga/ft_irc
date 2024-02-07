@@ -65,7 +65,7 @@ void    Commands::processInput( const std::string & input, Client * client, Serv
 	endLine = input.find("\n");
 	std::string line = "";
 	startLine = 0;
-	
+
 	while (endLine != std::string::npos && client->status != DISCONECT)
 	{
 		line = input.substr(startLine, endLine - startLine - 1);
@@ -130,10 +130,11 @@ void    Commands::execCmd( const std::string & command, const std::string & para
 void Commands::execKill( const std::string & parameter, Client * client, Server & server )
 {
 	(void)parameter;
+	(void)client;
 
 	server.stopServer();
 
-	std::cout << "Stopping server from: " << client->nick << std::endl;
+	//std::cout << "Stopping server from: " << client->nick << std::endl;
 }
 
 bool Commands::parseNick( const std::string & parameter)
@@ -141,12 +142,12 @@ bool Commands::parseNick( const std::string & parameter)
 	// check leading chaaracters first
 	if (parameter[0] == '#'  || parameter[0] == ':')
 		return false;
-	// check if there is an ascii space <' '>	
+	// check if there is an ascii space <' '>
 	for (int i = 0; i < int(parameter.size()); i++)
 	{
 		if (parameter[i] == ' ' || parameter[i] == ',')
 			return false;
 	}
-	
+
 	return true;
 }
