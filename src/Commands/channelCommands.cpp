@@ -190,6 +190,7 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 	std::vector<std::string> parameters;
 	Channel *channel;
 	Client *clientTo;
+	std::cout << "parameter: " << parameter << std::endl;
 	// check if client is op
 	parameters.push_back(parameter);
 	if (parameter.empty())
@@ -198,10 +199,9 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 		return ;
 	}
 	parameters = splitString(parameter, ' ');
-	//we have to implement response for only <channel>. we have to return <server> <CODE 324> <client> <channel> <modestring (+iktl)>
+	channel = server.getChannelByName(parameters[0]);
 	if (parameters[0][0] == '#' && parameters.size() > 1) // there is <cahnnel> <modestring>
 	{
-		channel = server.getChannelByName(parameters[0]);
 		// if channel doesn't exist send a ERR_NOSUCHCHANNEL
 		if (client->channels[channel] != "@")
 		{
@@ -234,6 +234,7 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 				if (parameters[2] != "")
 				{
 					channel->password = parameters[2];
+					channel->needPass = true;
 					Response::createMessage().From(*client).Command("MODE " + channel->name + " +k " + channel->password).Broadcast(channel->clients, true);
 					addFileLog("[+]Client: " + client->nick + " set channel: " + channel->name + " to password protected", GREEN_CMD);
 				}
@@ -253,6 +254,7 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 				else
 				{
 					channel->clientLimit = std::atoi(parameters[2].c_str());
+					channel->isLimited = true;
 					Response::createMessage().From(*client).Command("MODE " + channel->name + " +l " + parameters[2]).Broadcast(channel->clients, true);
 					addFileLog("[+]Client: " + client->nick + " set channel: " + channel->name + " to limit: " + parameters[2], GREEN_CMD);
 				}
@@ -302,12 +304,14 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 			else if (parameters[1] == "-k")
 			{
 				channel->password = "";
+				channel->needPass = false;
 				Response::createMessage().From(*client).Command("MODE " + channel->name + " -k").Broadcast(channel->clients, true);
 				addFileLog("[+]Client: " + client->nick + " set channel: " + channel->name + " to password protected", GREEN_CMD);
 			}
 			else if (parameters[1] == "-l")
 			{
 				channel->clientLimit = 0;
+				channel->isLimited = false;
 				Response::createMessage().From(*client).Command("MODE " + channel->name + " -l").Broadcast(channel->clients, true);
 				addFileLog("[+]Client: " + client->nick + " set channel: " + channel->name + " to no limit", GREEN_CMD);
 			}
@@ -325,6 +329,10 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 				addFileLog("[-]Client: " + client->nick + " tried to set channel: " + channel->name + " to something but didn't provide enough parameters", RED_CMD);
 			}
 		}
+	}
+	else if (parameters.size() == 1)
+	{
+		Response::createReply(RPL_CHANNELMODEIS).From(server).To(*client).Command(channel->name).Trailer("+" + channel->getMode()).Send();
 	}
 }
 
