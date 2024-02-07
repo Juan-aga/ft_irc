@@ -65,9 +65,11 @@ bool	Channel::addClient( Client * client, Server const & server, std::string con
 			Response::createReply(RPL_NOTOPIC).From(server).To(*client).Command(name).Trailer("No topic is set").Send();
 	    Response::createReply(RPL_NAMREPLY).From(server).To(*client).Command("= " + name).Trailer(msg).Send();
 	    Response::createReply(RPL_ENDOFNAMES).From(server).To(*client).Command(name).Trailer("End of name list.").Send();
+		addFileLog("[+]Client: " + client->nick + " joined channel: " + name, GREEN_CMD);
 		return true;
     }
-    // check error on password;
+    Response::createReply(ERR_BADCHANNELKEY).From(server).To(*client).Command(name).Trailer("Cannot join channel (+k)").Send();
+    addFileLog("[-]Client: " + client->nick + "  tried to join channel: " + name + " but wrong or missing keyword", RED_CMD);
     return false;
 }
 

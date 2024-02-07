@@ -25,53 +25,49 @@ void        Commands::execJoin( const std::string & parameter, Client * client, 
 {
 	Channel *   channel;
 	std::string::size_type space;
-	std::string	password = "";
+	std::string	password, channelName;
 
 	//maybe we have to do a function for this if there are another commands that need it.
+	password = "";
 	space = parameter.find(" ");
-	channel = server.getChannelByName(parameter.substr(0, space));
+	channelName = parameter.substr(0, space);
+	channel = server.getChannelByName(channelName);
 	if (space != std::string::npos)
 		password = parameter.substr(space + 1, parameter.size());
-	// If parameter is "0", the client leave all channels. execute PART for every channel.
 	if (parameter.size() == 1 && parameter[0] == '0')
 	{
 		for (std::map< Channel *, std::string >::iterator chan = client->channels.begin(); client->channels.size() > 0; chan = client->channels.begin())
 			execPart(chan->first->name + " " , client, server);
 	}
-	else if (!Channel::validName(parameter.substr(0, space)))
+	else if (!Channel::validName(channelName))
 	{
 		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("JOIN").Trailer("Not enough parameters").Send();
-		addFileLog("[-]Client: " + client->nick + " tried to join an invalid channel: " + parameter, RED_CMD);
+		addFileLog("[-]Client: " + client->nick + " tried to join an invalid channel: " + channelName, RED_CMD);
 	}
 	else if (channel)
 	{
 		if (channel->isClient(client->nick))
 		{
-			Response::createReply(ERR_USERONCHANNEL).From(server).To(*client).Command(parameter).Trailer("is already on channel").Send();
-			addFileLog("[!]Client: " + client->nick + " is already a member of channel: " + parameter, YELLOW_CMD);
+			Response::createReply(ERR_USERONCHANNEL).From(server).To(*client).Command(channelName).Trailer("is already on channel").Send();
+			addFileLog("[!]Client: " + client->nick + " is already a member of channel: " + channelName, YELLOW_CMD);
 		}
 		else if (channel->inviteOnly && !channel->isInvite(client))
 		{
-			Response::createReply(ERR_INVITEONLYCHAN).From(server).To(*client).Command(parameter).Trailer("Cannot join channel (Invite only)").Send();
-			addFileLog("[-]Client: " + client->nick + " tried to join channel: " + parameter + " but is invite only", RED_CMD);
+			Response::createReply(ERR_INVITEONLYCHAN).From(server).To(*client).Command(channelName).Trailer("Cannot join channel (Invite only)").Send();
+			addFileLog("[-]Client: " + client->nick + " tried to join channel: " + channelName + " but is invite only", RED_CMD);
 		}
 		else if (channel->clientLimit > 0 && static_cast<int>(channel->clients.size()) >= channel->clientLimit)
 		{
-			Response::createReply(ERR_CHANNELISFULL).From(server).To(*client).Command(parameter).Trailer("Cannot join channel (Channel is full)").Send();
-			addFileLog("[-]Client: " + client->nick + " tried to join channel: " + parameter + " but is full", RED_CMD);
+			Response::createReply(ERR_CHANNELISFULL).From(server).To(*client).Command(channelName).Trailer("Cannot join channel (Channel is full)").Send();
+			addFileLog("[-]Client: " + client->nick + " tried to join channel: " + channelName + " but is full", RED_CMD);
 		}
 		else
-		{
-			if (channel->addClient(client, server, password))
-				addFileLog("[+]Client: " + client->nick + " joined channel: " + parameter, GREEN_CMD);
-			else
-				std::cout << "ERROR, pasword not match.\n";
-		}
+			channel->addClient(client, server, password);
 	}
 	else
 	{
-		addFileLog("[+]Client: " + client->nick + " created channel: " + parameter, GREEN_CMD);
-		server.channels.push_back(new Channel(parameter, client, server));
+		addFileLog("[+]Client: " + client->nick + " created channel: " + channelName, GREEN_CMD);
+		server.channels.push_back(new Channel(channelName, client, server));
 	}
 }
 
