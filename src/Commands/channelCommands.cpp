@@ -196,7 +196,7 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 		return ;
 	}
 	parameters = splitString(parameter, ' ');
-	//we have to implement response for only <channel>. we have to return <server> <CODE 324> <client> <channel> <modestring (+iktl)> 
+	//we have to implement response for only <channel>. we have to return <server> <CODE 324> <client> <channel> <modestring (+iktl)>
 	if (parameters[0][0] == '#' && parameters.size() > 1) // there is <cahnnel> <modestring>
 	{
 		channel = server.getChannelByName(parameters[0]);
@@ -302,7 +302,7 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 	{
 		std::cout << "void MODE" << std::endl;
 		std::cout << "param: " << parameter << "\nParameters: ";
-		for (size_t i = 0; i < parameters.size(); i++) 
+		for (size_t i = 0; i < parameters.size(); i++)
 			std::cout << " " << parameters[i] << std::endl;
 	}
 	//std::cout << "[!]/MODE param1: " << parameters[1] << std::end
@@ -365,7 +365,7 @@ void	Commands::execPart( const std::string & parameter, Client * client, Server 
 			Response::createReply(ERR_NOSUCHCHANNEL).From(server).To(*client).Command(name).Trailer("No such channel").Send();
 		else if (channel->isClient(client->nick))
 		{
-			Response::createMessage().From(*client).Command("PART " + name).Trailer(reason).Broadcast(client->channels, true);
+			Response::createMessage().From(*client).Command("PART " + name).Trailer(reason).Broadcast(channel->clients, true);
 			channel->delClient(client, server);
 			client->channels.erase(channel);
 		}
