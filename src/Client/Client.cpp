@@ -5,7 +5,6 @@
 Client::Client(void): _recvBuff(""), fd(0), nick(""), user(""), realName(""), status(UNKNOWN)
 {
 	Server::numClients += 1;
-	//std::cout << "Client constructor called.\n";
 }
 
 Client::Client( Client const & cli )
@@ -21,7 +20,6 @@ Client::Client( Client const & cli )
 Client::~Client(void)
 {
 	Server::numClients -= 1;
-	//std::cout << "Client destructor called.\n";
 }
 
 void Client::setRecvBuff(std::string &buffer)

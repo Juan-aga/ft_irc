@@ -26,7 +26,7 @@ Channel::Channel( std::string const & name, Client * client, Server const & serv
 	Server::numChannels += 1;
 	totalCount += 1;
 	msg = getNamereply();
-	Response::createMessage().From(*client).To(*client).Command("JOIN " + name).Send();
+	Response::createMessage().From(*client).To(*client).Command("JOIN " + name).Send("[+]Client: " + client->nick + " created channel: " + this->name, GREEN_CMD);
     Response::createReply(RPL_NAMREPLY).From(server).To(*client).Command("= " + name).Trailer(msg).Send();
     Response::createReply(RPL_ENDOFNAMES).From(server).To(*client).Command(name).Trailer("End of name list.").Send();
 }
@@ -64,12 +64,10 @@ bool	Channel::addClient( Client * client, Server const & server, std::string con
 		else
 			Response::createReply(RPL_NOTOPIC).From(server).To(*client).Command(name).Trailer("No topic is set").Send();
 	    Response::createReply(RPL_NAMREPLY).From(server).To(*client).Command("= " + name).Trailer(msg).Send();
-	    Response::createReply(RPL_ENDOFNAMES).From(server).To(*client).Command(name).Trailer("End of name list.").Send();
-		addFileLog("[+]Client: " + client->nick + " joined channel: " + name, GREEN_CMD);
+	    Response::createReply(RPL_ENDOFNAMES).From(server).To(*client).Command(name).Trailer("End of name list.").Send("[+]Client: " + client->nick + " joined channel: " + this->name, GREEN_CMD);
 		return true;
     }
-    Response::createReply(ERR_BADCHANNELKEY).From(server).To(*client).Command(name).Trailer("Cannot join channel (+k)").Send();
-    addFileLog("[-]Client: " + client->nick + "  tried to join channel: " + name + " but wrong or missing keyword", RED_CMD);
+    Response::createReply(ERR_BADCHANNELKEY).From(server).To(*client).Command(name).Trailer("Cannot join channel (+k)").Send("[-]Client: " + client->nick + "  tried to join channel: " + name + " but wrong or missing keyword", RED_CMD);
     return false;
 }
 
