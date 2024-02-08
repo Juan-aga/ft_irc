@@ -70,8 +70,10 @@ void    Commands::processInput( const std::string & input, Client * client, Serv
 		line = input.substr(startLine, endLine - startLine);
 		carriage = line.find("\r");
 		space = line.find(" ");
-		if (space == std::string::npos )
+		if (space == std::string::npos && carriage == std::string::npos)
 			execCmd(line, "", client, server);
+		else if(space == std::string::npos)
+			execCmd(line.substr(0, carriage), "", client, server);
 		else if (carriage != std::string::npos)
 			execCmd(line.substr(0, space), line.substr(space + 1, carriage - space - 1), client, server);
 		else

@@ -236,14 +236,14 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 				else
 				{
 					clientTo = server.getClientByNick(parameters[2]);
-					if (clientTo && clientTo->channels[channel] != "@")
+					if (clientTo != NULL && channel->isClient(clientTo->nick) && clientTo->channels[channel] != "@")
 					{
 						clientTo->channels[channel] = "@";
 						Response::createMessage().From(*client).Command("MODE " + channel->name + " +o " + clientTo->nick).Broadcast(channel->clients, true);
 						addFileLog("[+]Client: " + client->nick + " set client: " + clientTo->nick + " to operator in channel: " + channel->name, GREEN_CMD);
 					}
 					else
-						Response::createReply(ERR_USERSDONTMATCH).From(server).To(*client).Command("MODE").Trailer("Users don't match").Send("[-]Client: " + client->nick + " tried to set client: " + clientTo->nick + " to operator in channel: " + channel->name + " but client doesn't exist or is already operator", RED_CMD);
+						Response::createReply(ERR_USERSDONTMATCH).From(server).To(*client).Command("MODE").Trailer("Users don't match").Send("[-]Client: " + client->nick + " tried to set client: " + parameters[2] + " to operator in channel: " + channel->name + " but client doesn't exist or is already operator", RED_CMD);
 				}
 
 			}
@@ -281,10 +281,14 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 			else if (parameters[1] == "-o")
 			{
 				clientTo = server.getClientByNick(parameters[2]);
-				clientTo->channels[channel] = "";
-				std::cout << "clientTo->channels[channel] = " << clientTo->channels[channel] << std::endl;
-				Response::createMessage().From(*client).Command("MODE " + channel->name + " -o " + clientTo->nick).Broadcast(channel->clients, true);
-				addFileLog("[+]Client: " + client->nick + " set client: " + clientTo->nick + " to no operator in channel: " + channel->name, GREEN_CMD);
+				if (clientTo != NULL && channel->isClient(clientTo->nick) && clientTo->channels[channel] == "@")
+				{
+					clientTo->channels[channel] = "+";
+					Response::createMessage().From(*client).Command("MODE " + channel->name + " -o " + clientTo->nick).Broadcast(channel->clients, true);
+					addFileLog("[+]Client: " + client->nick + " set client: " + clientTo->nick + " to no operator in channel: " + channel->name, GREEN_CMD);
+				}
+				else
+					Response::createReply(ERR_USERSDONTMATCH).From(server).To(*client).Command("MODE").Trailer("Users don't match").Send("[-]Client: " + client->nick + " tried to set client: " + parameters[2] + " to operator in channel: " + channel->name + " but client doesn't exist or is already operator", RED_CMD);
 			}
 			else
 				Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("MODE").Trailer("Need more params").Send("[-]Client: " + client->nick + " tried to set channel: " + channel->name + " to something but didn't provide enough parameters", RED_CMD);
