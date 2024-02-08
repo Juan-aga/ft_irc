@@ -6,7 +6,7 @@
 /*   By: paescano <paescano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/25 17:21:30 by paescano          #+#    #+#             */
-/*   Updated: 2024/01/29 15:44:02 by paescano         ###   ########.fr       */
+/*   Updated: 2024/02/08 13:51:39 by paescano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,7 +105,12 @@ void Response::Send(){
 	}
 	send(this->sentfd, message.c_str(), message.length(), 0);
 	if (DEBUG)
-		std::cout << "From response: " << message;
+		addFileLog("[/]" + message, BLUE_CMD);
+}
+
+void Response::Send(std::string message, std::string color){
+	addFileLog(message, color);
+	Send();
 }
 
 void Response::Broadcast(std::vector<Client *> clients, bool self) {

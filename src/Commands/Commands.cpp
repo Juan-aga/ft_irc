@@ -54,8 +54,7 @@ bool    Commands::checkLogin( Client * client, Server const & server )
 	if (client->status != AUTH || client->nick == "" || client->user == "" || client->realName == "")
 		return false;
 	client->status = CONNECTED;
-	Response::createReply(RPL_WELCOME).From(server).To(*client).Trailer("Welcome to irc server.").Send();
-	addFileLog("[+]Client: " + client->nick + " from: " + client->ip + " Conected.", GREEN_CMD);
+	Response::createReply(RPL_WELCOME).From(server).To(*client).Trailer("Welcome to irc server.").Send("[+]Client: " + client->nick + " from: " + client->ip + " Conected.", GREEN_CMD);
 	return true;
 }
 
@@ -85,10 +84,9 @@ void    Commands::processInput( const std::string & input, Client * client, Serv
 		{
 			//send failed to connect, but every single command send his message.
 			if (DEBUG)
-				std::cout << "Client: " << client->nick << " failed to connect from FD: " << client->fd << std::endl;
+				addFileLog("[/]Client from ip: " + client->ip + " failed to connect", BLUE_CMD);
 		}
 		else if (client->status == CONNECTED)
-
 			server.channels[0]->addClient(client, server, "");
 	}
 }
@@ -98,21 +96,12 @@ void    Commands::execCmd( const std::string & command, const std::string & para
 	_CMD    cmd;
 
 	cmd = strToCmd(command);
-	//if the command is not found, we have to send a response to the client.
-	if (cmd == MAX_CMD)
-	{
-		Response::createReply(ERR_UNKNOWNCOMMAND).From(server).To(*client).Command(command).Trailer("Unknown command").Send();
-		addFileLog("[-]Command: " + command + " not found. Arguments: " + parameter, RED_CMD);
-	}
-	else if (client->status == DISCONECT)
-	//this is not "failed to connect", it was disconnected by the server.
+	if (cmd == MAX_CMD) //if the command is not found, we have to send a response to the client.
+		Response::createReply(ERR_UNKNOWNCOMMAND).From(server).To(*client).Command(command).Trailer("Unknown command").Send("[-]Command: " + command + " not found. Arguments: " + parameter, RED_CMD);
+	else if (client->status == DISCONECT) //this is not "failed to connect", it was disconnected by the server.
 		addFileLog("[!]Client from ip: " + client->ip + " disconnected by the server", YELLOW_CMD);
 	else if ((client->status == UNKNOWN && cmd > CAP) || (client->status == AUTH && cmd >= JOIN))
-	{
-		//not auth to do the command
-		 //not sure if we have to send a response to the client.
-		 std::cout << "Not authorized to execute " << command << std::endl;
-	}
+		addFileLog("[!]Client from ip: " + client->ip + " not authorized to execute " + command, YELLOW_CMD);
 	else
 	{
 		if (command != "PRIVMSG" && command != "PASS" && command != "CAP")
@@ -134,8 +123,6 @@ void Commands::execKill( const std::string & parameter, Client * client, Server 
 	(void)client;
 
 	server.stopServer();
-
-	//std::cout << "Stopping server from: " << client->nick << std::endl;
 }
 
 bool Commands::parseNick( const std::string & parameter)
