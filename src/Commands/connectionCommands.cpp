@@ -3,7 +3,6 @@
 
 void        Commands::execCap( const std::string & parameter, Client * client, Server & server )
 {
-	//we don't handle 
 	(void)parameter;
 	(void)client;
 	(void)server;
@@ -12,7 +11,6 @@ void        Commands::execCap( const std::string & parameter, Client * client, S
 
 void		Commands::execWho( const std::string & parameter, Client * client, Server & server )
 {
-	//we don't handle 
 	(void)parameter;
 	(void)client;
 	(void)server;
@@ -37,7 +35,7 @@ void        Commands::execPass( const std::string & parameter, Client * client, 
 void Commands::execNick( const std::string & parameter, Client * client, Server & server )
 {
 	Client * check;
-	
+
 	if (parameter.empty()) // not enough parameters
 	{
 		if (client->nick == "")
@@ -70,7 +68,7 @@ void Commands::execNick( const std::string & parameter, Client * client, Server 
 void Commands::execUser( const std::string & parameter, Client * client, Server & server )
 {
 	std::string::size_type space, colon;
-	
+
 	space = parameter.find(" ");
 	colon = parameter.find(":");
 	if (parameter.empty()) //not enough parameters

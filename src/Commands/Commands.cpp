@@ -73,7 +73,7 @@ void    Commands::processInput( const std::string & input, Client * client, Serv
 		if (space == std::string::npos )
 			execCmd(line, "", client, server);
 		else if (carriage != std::string::npos)
-			execCmd(line.substr(0, space), line.substr(space + 1, endLine - space - 2), client, server);
+			execCmd(line.substr(0, space), line.substr(space + 1, carriage - space - 1), client, server);
 		else
 			execCmd(line.substr(0, space), line.substr(space + 1, endLine - space), client, server);
 		startLine = endLine + 1;
