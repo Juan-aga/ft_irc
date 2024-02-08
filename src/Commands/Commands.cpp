@@ -60,20 +60,22 @@ bool    Commands::checkLogin( Client * client, Server const & server )
 
 void    Commands::processInput( const std::string & input, Client * client, Server & server )
 {
-	std::string::size_type endLine, space, startLine;
+	std::string::size_type endLine, space, startLine, carriage;
 	endLine = input.find("\n");
 	std::string line = "";
 	startLine = 0;
 
 	while (endLine != std::string::npos && client->status != DISCONECT)
 	{
-		line = input.substr(startLine, endLine - startLine - 1);
+		line = input.substr(startLine, endLine - startLine);
+		carriage = line.find("\r");
 		space = line.find(" ");
-		if (space != std::string::npos )
-			execCmd(line.substr(0, space), line.substr(space + 1, line.size()), client, server);
-		else
-		// need to handle parameters in every command, someone don't need parameters.
+		if (space == std::string::npos )
 			execCmd(line, "", client, server);
+		else if (carriage != std::string::npos)
+			execCmd(line.substr(0, space), line.substr(space + 1, endLine - space - 2), client, server);
+		else
+			execCmd(line.substr(0, space), line.substr(space + 1, endLine - space), client, server);
 		startLine = endLine + 1;
 		endLine = input.find('\n', startLine);
 	}

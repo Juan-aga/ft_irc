@@ -7,6 +7,13 @@ int Channel::totalCount = 0;
 Channel::Channel( void ): _numClients(1), name("#general"), topic("This is the general channel.")
 {
 	Server::numChannels += 1;
+	this->password = "";
+	this->clientLimit = 0;
+	this->isFull = false;
+	this->inviteOnly = false;
+	this->opTopic = true;
+	this->needPass = false;
+	this->isLimited = false;
 }
 
 Channel::Channel( std::string const & name, Client * client, Server const & server ): _numClients(1), name(name)
@@ -18,7 +25,7 @@ Channel::Channel( std::string const & name, Client * client, Server const & serv
 	this->clientLimit = 0;
 	this->isFull = false;
 	this->inviteOnly = false;
-	this->opTopic = false;
+	this->opTopic = true;
 	this->needPass = false;
 	this->isLimited = false;
 	client->channels[this] = "@";
