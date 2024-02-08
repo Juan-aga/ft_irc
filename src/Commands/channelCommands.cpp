@@ -291,7 +291,7 @@ void		Commands::execMode(const std::string & parameter, Client * client, Server 
 		}
 	}
 	else if (parameters.size() == 1)
-		Response::createReply(RPL_CHANNELMODEIS).From(server).To(*client).Command(channel->name).Trailer("+" + channel->getMode()).Send("[+]Client: " + client->nick + " get mode of channel: " + channel->name + " to: " + channel->getMode(), GREEN_CMD);
+		Response::createReply(RPL_CHANNELMODEIS).From(server).To(*client).Command(channel->name).Trailer(channel->getMode()).Send("[+]Client: " + client->nick + " get mode of channel: " + channel->name + " to: " + channel->getMode(), GREEN_CMD);
 }
 
 void Commands::execInvite(const std::string& parameter, Client* client, Server& server) {
