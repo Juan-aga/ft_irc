@@ -2,3 +2,4 @@
 ircserv
 /obj
 *.log
+*.dSYM

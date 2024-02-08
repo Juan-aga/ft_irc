@@ -96,7 +96,7 @@ leaks: ${NAME}
 
 val: ${NAME}
 	@echo "$(B)Checking with valgrind...$(X)"
-	@valgrind ./${NAME} ${ARG}
+	@valgrind --leak-check=full --show-leak-kinds=all ./${NAME} ${ARG}
 
 credit:
 	@echo " ┏━━━┓┏━━━━┓    ┏━━┓┏━━━┓┏━━━┓"
@@ -138,4 +138,4 @@ lol:
 	@echo "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⣦⣠⠇"
 	@echo "with love by: paescano juan-aga preina-g"
 
-.PHONY:	all clean fclean re debug leaks val
+.PHONY:	all clean fclean re debug leaks val bonus credit lol head clean_bonus fclean_bonus re_bonus

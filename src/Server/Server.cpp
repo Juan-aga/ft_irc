@@ -77,9 +77,7 @@ void Server::createSocket()
 void Server::readMesage(Client * client)
 {
 	int readed = 0;
-	std::string readBuffer = "";
-	char buffer[1024]; //save the message
-
+	char buffer[1024];
 
 	memset(buffer, 0, 1024);
 	while (1)
@@ -98,20 +96,20 @@ void Server::readMesage(Client * client)
 		}
 		if (readed == -1)
 		{
-			//failed to read from client. we need to send a RPL??
 			if (DEBUG)
 				std::cout << "Failed to read from " << client->nick << " in fd: " << client->fd << std::endl;
-			return;
+			break;
 		}
-		readBuffer.append(buffer);
-		if (readBuffer.find("\r\n"))
+		client->recvBuff.append(buffer);
+		if (client->recvBuff.find("\n") != std::string::npos)
 		{
-			std::cout << "Readed: " << readBuffer << std::endl;
+			if (DEBUG)
+				std::cout << "Readed: " << client->recvBuff << std::endl;
+			_commands.processInput(client->recvBuff, client, *this);
+			client->recvBuff.clear();
 			break;
 		}
 	}
-	std::cout << "Readed to proccess: " << readBuffer << std::endl;
-	_commands.processInput(readBuffer, client, *this);
 }
 
 void Server::newClient(std::vector<struct pollfd>& pollfds)

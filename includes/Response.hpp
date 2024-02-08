@@ -15,6 +15,7 @@ enum	Code
 {
 	NONE = 0,
 	RPL_WELCOME = 1,
+	RPL_CHANNELMODEIS = 324,
 	RPL_NOTOPIC = 331,
 	RPL_TOPIC = 332,
 	RPL_INVITING = 341,
@@ -36,6 +37,7 @@ enum	Code
 	ERR_PASSWDMISMATCH = 464,
 	ERR_CHANNELISFULL = 471,
 	ERR_INVITEONLYCHAN = 473,
+	ERR_BADCHANNELKEY = 475,
 	ERR_CHANOPRIVSNEEDED = 482,
 	ERR_USERSDONTMATCH = 502
 };
@@ -71,6 +73,7 @@ class Response
 		Response &	Command( const std::string & command );
 		Response& Trailer(const std::string &trailer);
 		void Send();
+		void Send(std::string message, std::string color);
 		void Broadcast(std::vector<Client *> clients, bool self);
 		//bradcast to all the channels were the cient is on. First check that channels size is greather than 0;
 		void Broadcast(std::map< Channel *, std::string >	channels, bool self);

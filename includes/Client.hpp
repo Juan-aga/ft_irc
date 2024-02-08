@@ -9,14 +9,16 @@ class Channel;
 class Client
 {
 private:
-	std::string _recvBuff;
-	
+
+
 public:
+	std::string recvBuff;
 	int         fd;
 	std::string nick;
 	std::string user;
 	std::string realName;
 	std::string ip;
+
 	//maybe we change the string for the enum of modes
 	std::map< Channel *, std::string >	channels;
 	CLIENT_STATUS   status;
