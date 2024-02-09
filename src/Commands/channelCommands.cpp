@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <iostream>
 #include <string>
-#include <sys/stdio.h>
+#include <stdio.h>
 #include <sys/unistd.h>
 
 //Operators commands:

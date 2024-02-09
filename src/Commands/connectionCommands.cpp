@@ -90,6 +90,26 @@ void Commands::execUser( const std::string & parameter, Client * client, Server 
 	}
 }
 
+void	Commands::execWhois( const std::string & parameter, Client * client, Server & server )
+{
+	std::string::size_type space;
+	Client *	clientWho = NULL;
+
+	space = parameter.find(" ");
+	if (space != std::string::npos)
+		clientWho = server.getClientByNick(parameter.substr(space + 1));
+	if (clientWho)
+	{
+		Response::createMessage().From(server).To(*client).Command("311 " + clientWho->nick + " " + clientWho->nick + " " + clientWho->user + " " + server.serverHost + "/" + clientWho->nick + " *").Trailer(clientWho->realName).Send();
+		//Response::createMessage().From(server).To(*client).Command(RPL_WHOISUSER + " " + clientWho->nick + " " + clientWho->nick + " " + clientWho->user + " " + server.serverHost + "/" + clientWho->nick + " *").Trailer(clientWho->realName).Send();
+		Response::createMessage().From(server).To(*client).Command("318 " + clientWho->nick + " " + clientWho->nick).Trailer("End of /WHOIS list.").Send();
+		//Response::createMessage().From(server).To(*client).Command(RPL_ENDOFWHOIS + " " + clientWho->nick + " " + clientWho->nick).Trailer("End of /WHOIS list.").Send();
+	}
+	else
+		std::cout << "Failed who to " << parameter << std::endl;
+};
+
+
 void Commands::execQuit( const std::string & parameter, Client * client, Server & server )
 {
 	std::map< Channel *, std::string >::iterator	channel;
@@ -102,3 +122,4 @@ void Commands::execQuit( const std::string & parameter, Client * client, Server 
 	client->channels.clear();
 	client->status = DISCONECT;
 }
+
