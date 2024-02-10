@@ -18,6 +18,7 @@ class Commands
 			WHO,
 			NICK,
 			USER,
+			WHOIS,
 			QUIT,
 			//only CONNECTED
 			JOIN,
@@ -52,6 +53,7 @@ class Commands
 		static void execPass( const std::string & parameter, Client * client, Server & server );
 		static void execNick( const std::string & parameter, Client * client, Server & server );
 		static void execUser( const std::string & parameter, Client * client, Server & server );
+		static void execWhois( const std::string & parameter, Client * client, Server & server );
 		static void execQuit( const std::string & parameter, Client * client, Server & server );
 		//channels
 		static void execJoin( const std::string & parameter, Client * client, Server & server );

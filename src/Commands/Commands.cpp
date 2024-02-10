@@ -17,6 +17,7 @@ Commands::Commands( void )
 	commandMap["MODE"] = MODE;
 	commandMap["INVITE"] = INVITE;
 	commandMap["WHO"] = WHO;
+	commandMap["WHOIS"] = WHOIS;
 
 	commands[CAP].exec = &execCap;
 	commands[PASS].exec = &execPass;
@@ -32,6 +33,7 @@ Commands::Commands( void )
 	commands[MODE].exec = &execMode;
 	commands[INVITE].exec = &execInvite;
 	commands[WHO].exec = &execWho;
+	commands[WHOIS].exec = &execWhois;
 }
 
 Commands::~Commands( void )
