@@ -45,6 +45,7 @@ class Server
 		Client *	getClientByNick( std::string const & nick );
 		void		closeChannel( Channel * channel );
 		static void	stopServer( void );
+		std::string bot(std::string bot_cmd);
 };
 
 std::ostream &	operator<<(std::ostream & o, Server const & server);

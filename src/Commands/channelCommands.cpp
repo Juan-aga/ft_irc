@@ -76,9 +76,11 @@ void    Commands::execPrivmsg( const std::string & parameter, Client * client, S
 		if (!Channel::validName(to))
 		{
 			clientTo = server.getClientByNick(to);
-			if (clientTo)
+			if (clientTo && clientTo->nick != "bot") // if client exists and is not bot
 				Response::createMessage().From(*client).To(*clientTo).Command("PRIVMSG " + to).Trailer(msg).Send();
-			else
+			else if (clientTo) // if client exists and is bot
+				Response::createMessage().From(*clientTo).To(*client).Command("PRIVMSG " + client->nick).Trailer(server.bot(msg)).Send("[+]Client: " + client->nick + " used bot command: " + msg, GREEN_CMD);
+			else // if client doesn't exist
 				Response::createReply(ERR_NOSUCHNICK).From(server).To(*client).Command(to).Trailer("No such nick").Send();
 		}
 		else if (channel)

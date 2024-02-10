@@ -17,6 +17,7 @@ OBJ_DIR = obj/
 
 CPPFILES = 	main.cpp 						\
 			Server/Server.cpp 				\
+			Server/bot.cpp					\
 			Utils/checkArgs.cpp 			\
 			Utils/addFileLog.cpp			\
 			Utils/getTime.cpp				\
