@@ -99,17 +99,14 @@ void Server::readMesage(Client * client)
 			// maybe make a function for this?
 			if (DEBUG && !readed)
 				std::cout << "Connection closed by client " << client->fd << std::endl;
-			close(client->fd);
 			client->status = DISCONECT;
-			clients.erase(client->fd);
-			delete client;
 			return;
 		}
-		if (readed == -1)
+		else if (readed == -1)
 		{
 			if (DEBUG)
 				std::cout << "Failed to read from " << client->nick << " in fd: " << client->fd << std::endl;
-			break;
+			return;
 		}
 		client->recvBuff.append(buffer);
 		if (client->recvBuff.find("\n") != std::string::npos)
@@ -118,7 +115,7 @@ void Server::readMesage(Client * client)
 				std::cout << "Readed: " << client->recvBuff << std::endl;
 			_commands.processInput(client->recvBuff, client, *this);
 			client->recvBuff.clear();
-			break;
+			return;
 		}
 	}
 }
@@ -145,6 +142,12 @@ void Server::newClient(std::vector<struct pollfd>& pollfds)
 	}
 }
 
+void Server::delClient(Client * client)
+{
+	close(client->fd);
+	clients.erase(client->fd);
+	delete client;
+}
 void Server::connectClient(void)
 {
 	std::vector<struct pollfd> pollfds;
@@ -152,7 +155,7 @@ void Server::connectClient(void)
 	pollfds.push_back((struct pollfd){this->_socket_fd, POLLIN, 0});
 	while (poll(&pollfds[0], pollfds.size(), -1) && _running)
 	{
-		for (int i = 0; i < int(pollfds.size()); i++)
+		for (size_t i = 0; i < pollfds.size(); i++)
 		{
 			if (pollfds[i].revents & POLLIN)
 			{
@@ -161,6 +164,11 @@ void Server::connectClient(void)
 				else
 					readMesage(clients[pollfds[i].fd]);
 			}
+		}
+		for (size_t i = 3; i < pollfds.size(); i++)
+		{
+			if (clients[pollfds[i].fd]->status == DISCONECT)
+				delClient(clients[pollfds[i].fd]);
 		}
 	}
 
