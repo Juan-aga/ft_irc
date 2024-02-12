@@ -11,9 +11,23 @@ void        Commands::execCap( const std::string & parameter, Client * client, S
 
 void		Commands::execWho( const std::string & parameter, Client * client, Server & server )
 {
+	Channel *	channel;
+	Client *	clientWho;
+
+	channel = server.getChannelByName(parameter);
+	if (channel)
+	{
+		for (size_t i = 0; i < channel->clients.size(); i++)
+		{
+			clientWho = channel->clients[i];
+			Response::createReply(RPL_WHOREPLY).From(server).To(*client).Command(channel->name + " " + clientWho->user + server.serverHost + "/" + clientWho->nick + " " + server.serverName + " " + clientWho->nick + " H" + clientWho->channels[channel] + " :0 " + clientWho->realName).Send();
+		}
+		Response::createReply(RPL_ENDOFWHO).From(server).To(*client).Command(channel->name).Trailer("End of WHO list").Send();
+	}
 	(void)parameter;
 	(void)client;
 	(void)server;
+
 	addFileLog("[!]Client from ip: " + client->ip + " trying WHO: " + parameter + ". Not supported.", YELLOW_CMD);
 }
 
@@ -122,4 +136,3 @@ void Commands::execQuit( const std::string & parameter, Client * client, Server 
 	client->channels.clear();
 	client->status = DISCONECT;
 }
-

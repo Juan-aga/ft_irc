@@ -18,6 +18,7 @@ Commands::Commands( void )
 	commandMap["INVITE"] = INVITE;
 	commandMap["WHO"] = WHO;
 	commandMap["WHOIS"] = WHOIS;
+	commandMap["whois"] = WHOIS;
 
 	commands[CAP].exec = &execCap;
 	commands[PASS].exec = &execPass;

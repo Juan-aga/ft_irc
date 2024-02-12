@@ -31,7 +31,7 @@ class Commands
 			KILLSERVER,
 			//mode
 			MODE,
-			MAX_CMD	
+			MAX_CMD
 		};
 		typedef void (*cmdFunction)(const std::string &, Client *, Server &);
 		typedef struct s_commands
@@ -62,10 +62,10 @@ class Commands
 		static void execPart( const std::string & parameter, Client * client, Server & server );
 		static void execKick( const std::string & parameter, Client * client, Server & server );
 		static void execInvite( const std::string & parameter, Client * client, Server & server );
-		
+
 		static void execKill( const std::string & parameter, Client * client, Server & server );
 		static void	execMode(const std::string & parameter, Client * client, Server & server);
-		
+
 	public:
 		Commands( void );
 		~Commands( void );
