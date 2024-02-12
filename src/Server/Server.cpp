@@ -6,7 +6,18 @@ bool Server::_running = true;
 
 Server::Server(int port, std::string password): _password(password), _port(port),serverName("server"), serverHost("test.irc")
 {
-	channels.push_back(new Channel());
+	std::stringstream ss;
+	Client * bot = new Client;
+
+	bot->nick = "bot";
+	bot->user = "bot";
+	bot->realName = "bot";
+	bot->status = CONNECTED;
+	bot->fd = 0;
+	ss << "[+]" << *this;
+	addFileLog(ss.str(), GREEN_CMD);
+	this->clients[0] = bot;
+	channels.push_back(new Channel("General", bot, *this));
 }
 
 Server::~Server()

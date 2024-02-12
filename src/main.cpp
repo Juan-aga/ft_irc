@@ -7,9 +7,6 @@ int main(int argc, char **argv)
 
 	ft_init_signals();
 	server.createSocket();
-	std::stringstream ss;
-	ss << "[+]" << server;
-	addFileLog(ss.str(), GREEN_CMD);
 	server.connectClient();
 	return (0);
 }
