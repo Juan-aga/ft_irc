@@ -363,6 +363,7 @@ void	Commands::execPart( const std::string & parameter, Client * client, Server 
 	space = parameter.find(" ");
 	colon = parameter.find(":");
 	if (space == std::string::npos || !Channel::validName(parameter.substr(0, space)))
+
 		Response::createReply(ERR_NEEDMOREPARAMS).From(server).To(*client).Command("PART").Trailer("Not enough parameters").Send("[-]Client: " + client->nick + " tried to part with not enough parameters", RED_CMD);
 	else
 	{

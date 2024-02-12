@@ -17,7 +17,7 @@ Server::Server(int port, std::string password): _password(password), _port(port)
 	ss << "[+]" << *this;
 	addFileLog(ss.str(), GREEN_CMD);
 	this->clients[0] = bot;
-	channels.push_back(new Channel("General", bot, *this));
+	channels.push_back(new Channel("#General", bot, *this));
 }
 
 Server::~Server()
@@ -99,17 +99,14 @@ void Server::readMesage(Client * client)
 			// maybe make a function for this?
 			if (DEBUG && !readed)
 				std::cout << "Connection closed by client " << client->fd << std::endl;
-			close(client->fd);
 			client->status = DISCONECT;
-			clients.erase(client->fd);
-			delete client;
-			return;
+			break;
 		}
-		if (readed == -1)
+		else if (readed == -1)
 		{
 			if (DEBUG)
 				std::cout << "Failed to read from " << client->nick << " in fd: " << client->fd << std::endl;
-			break;
+			return;
 		}
 		client->recvBuff.append(buffer);
 		if (client->recvBuff.find("\n") != std::string::npos)
@@ -118,7 +115,7 @@ void Server::readMesage(Client * client)
 				std::cout << "Readed: " << client->recvBuff << std::endl;
 			_commands.processInput(client->recvBuff, client, *this);
 			client->recvBuff.clear();
-			break;
+			return;
 		}
 	}
 }
@@ -145,6 +142,25 @@ void Server::newClient(std::vector<struct pollfd>& pollfds)
 	}
 }
 
+void Server::delClient(Client * client, std::vector<struct pollfd>& pollfds)
+{
+	int	fd;
+	std::cout << "Delete client " << client->nick + " in fd: " << client->fd << std::endl;
+
+	//close(client->fd);
+	fd = client->fd;
+	delete client;
+	clients.erase(fd);
+	for (size_t i = 0; i < pollfds.size(); i++)
+	{
+		if (pollfds[i].fd == fd)
+		{
+			pollfds.erase(pollfds.begin() + i);
+			break;
+		}
+	}
+}
+
 void Server::connectClient(void)
 {
 	std::vector<struct pollfd> pollfds;
@@ -152,18 +168,25 @@ void Server::connectClient(void)
 	pollfds.push_back((struct pollfd){this->_socket_fd, POLLIN, 0});
 	while (poll(&pollfds[0], pollfds.size(), -1) && _running)
 	{
-		for (int i = 0; i < int(pollfds.size()); i++)
+		for (size_t i = 0; i < pollfds.size(); i++)
 		{
 			if (pollfds[i].revents & POLLIN)
 			{
 				if (pollfds[i].fd == this->_socket_fd)
 					newClient(pollfds);
-				else
+				else if (clients[pollfds[i].fd] && clients[pollfds[i].fd]->status != DISCONECT)
 					readMesage(clients[pollfds[i].fd]);
 			}
 		}
+		for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it ++)
+		{
+			if (it->second->status == DISCONECT)
+			{
+				delClient(it->second, pollfds);
+				it = clients.begin();
+			}
+		}
 	}
-
 }
 
 Channel *	Server::getChannelByName( std::string const & name )

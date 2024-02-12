@@ -8,7 +8,7 @@
 #define MAX_CONNECTS 10
 /**
  * @brief main class to manage the server
- * 
+ *
  */
 class Server
 {
@@ -39,6 +39,7 @@ class Server
 
         void createSocket(void);
         void connectClient(void);
+        void delClient( Client * client ,std::vector<struct pollfd>& pollfds );
 		void readMesage(Client * client);
 		void newClient(std::vector<struct pollfd> &pollfds);
 		Channel *	getChannelByName( std::string const & name );

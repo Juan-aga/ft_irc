@@ -3,6 +3,11 @@
 #include "Client.hpp"
 #include "Utils.hpp"
 
+// for check fstat
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 class Server;
 
 enum	Type
@@ -56,6 +61,7 @@ class Response
 	private:
 		std::string from;
 		std::string to;
+		CLIENT_STATUS	toStatus;
 		Type		type;
 		Code		code;
 		std::string	command;

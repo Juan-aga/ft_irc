@@ -44,24 +44,24 @@ enum	CLIENT_STATUS{
 };
 
 /**
- * @brief check the number of arguments and if 
+ * @brief check the number of arguments and if
  * the port is a number and a valid port
  * between 1024 and 65535
- * 
+ *
  * @param argc number of arguments
  * @param argv arguments
  */
 void checkArgs(int argc, char **argv);
 /**
  * @brief Get the actual time
- * 
+ *
  * @return std::string with the actual time in format
  * dd/mm/yyyy hh:mm:ss
  */
 std::string getTime();
 /**
  * @brief Add a message to the ircserv.log file
- * 
+ *
  * @param message message to add
  * @param color color of the message
  * @return true if the message was added
@@ -70,6 +70,6 @@ std::string getTime();
 bool addFileLog(std::string message, std::string color);
 /**
  * @brief init the signals for control + c to close the server
- * 
+ *
  */
 void ft_init_signals(void);
