@@ -17,7 +17,7 @@ Server::Server(int port, std::string password): _password(password), _port(port)
 	ss << "[+]" << *this;
 	addFileLog(ss.str(), GREEN_CMD);
 	this->clients[0] = bot;
-	channels.push_back(new Channel("General", bot, *this));
+	channels.push_back(new Channel("#General", bot, *this));
 }
 
 Server::~Server()
@@ -100,7 +100,7 @@ void Server::readMesage(Client * client)
 			if (DEBUG && !readed)
 				std::cout << "Connection closed by client " << client->fd << std::endl;
 			client->status = DISCONECT;
-			return;
+			break;
 		}
 		else if (readed == -1)
 		{
@@ -142,12 +142,25 @@ void Server::newClient(std::vector<struct pollfd>& pollfds)
 	}
 }
 
-void Server::delClient(Client * client)
+void Server::delClient(Client * client, std::vector<struct pollfd>& pollfds)
 {
-	close(client->fd);
-	clients.erase(client->fd);
+	int	fd;
+	std::cout << "Delete client " << client->nick + " in fd: " << client->fd << std::endl;
+
+	//close(client->fd);
+	fd = client->fd;
 	delete client;
+	clients.erase(fd);
+	for (size_t i = 0; i < pollfds.size(); i++)
+	{
+		if (pollfds[i].fd == fd)
+		{
+			pollfds.erase(pollfds.begin() + i);
+			break;
+		}
+	}
 }
+
 void Server::connectClient(void)
 {
 	std::vector<struct pollfd> pollfds;
@@ -161,17 +174,19 @@ void Server::connectClient(void)
 			{
 				if (pollfds[i].fd == this->_socket_fd)
 					newClient(pollfds);
-				else
+				else if (clients[pollfds[i].fd] && clients[pollfds[i].fd]->status != DISCONECT)
 					readMesage(clients[pollfds[i].fd]);
 			}
 		}
-		for (size_t i = 3; i < pollfds.size(); i++)
+		for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it ++)
 		{
-			if (clients[pollfds[i].fd]->status == DISCONECT)
-				delClient(clients[pollfds[i].fd]);
+			if (it->second->status == DISCONECT)
+			{
+				delClient(it->second, pollfds);
+				it = clients.begin();
+			}
 		}
 	}
-
 }
 
 Channel *	Server::getChannelByName( std::string const & name )

@@ -18,6 +18,7 @@ Response::Response()
 	this->from = "";
 	this->code = NONE;
 	this->to = "";
+	this->toStatus = UNKNOWN;
 	this->command = "";
 	this->trailer = "";
 	this->sentfd = 1;
@@ -40,12 +41,12 @@ Response Response::createReply(const Code &code)
 	return response;
 }
 
-Response& Response::From(const Client &client) { 
+Response& Response::From(const Client &client) {
 	this->from = client.nick ;//+ "!" + client.user + "@" + client.host;
 	return *this;
  }
 
- Response& Response::From(const Server & server) { 
+ Response& Response::From(const Server & server) {
 	this->from = server.serverName + "." + server.serverHost ;
 	return *this;
  }
@@ -53,6 +54,7 @@ Response& Response::From(const Client &client) {
 Response& Response::To(const Client &client) {
 	this->sentfd = client.fd;
 	this->to = client.nick;
+	this->toStatus = client.status;
 	return *this;
 }
 
@@ -95,6 +97,10 @@ std::string Response::generateReply(){
 
 void Response::Send(){
 	std::string message;
+	struct stat	buff;
+
+	if (!sentfd)
+		return;
 	switch(this->type){
 		case MESSAGE:
 			message = generateMessage();
@@ -103,7 +109,12 @@ void Response::Send(){
 			message = generateReply();
 			break;
 	}
-	send(this->sentfd, message.c_str(), message.length(), 0);
+	if (!(fstat(sentfd, &buff) == EBADF))
+		send(this->sentfd, message.c_str(), message.length(), 0);
+	// if (toStatus != DISCONECT)
+
+
+
 	if (DEBUG)
 		addFileLog("[/]" + message, BLUE_CMD);
 }
@@ -127,7 +138,7 @@ void Response::Broadcast(std::vector<Client *> clients, bool self) {
 void Response::Broadcast(std::map< Channel *, std::string >	channels, bool self) {
 	std::map< Channel *, std::string >::iterator	channel;
 	std::vector<Client *>::iterator 				it;
-	
+
 	for (channel = channels.begin(); channel != channels.end(); channel++)
 	{
 		for (it = channel->first->clients.begin(); it != channel->first->clients.end(); it++)

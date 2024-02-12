@@ -39,7 +39,7 @@ class Server
 
         void createSocket(void);
         void connectClient(void);
-        void delClient( Client * client );
+        void delClient( Client * client ,std::vector<struct pollfd>& pollfds );
 		void readMesage(Client * client);
 		void newClient(std::vector<struct pollfd> &pollfds);
 		Channel *	getChannelByName( std::string const & name );

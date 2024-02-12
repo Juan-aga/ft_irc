@@ -13,4 +13,5 @@ void	ft_init_signals(void)
 {
 	signal(SIGINT, ft_handler_ctrl_c);
 	signal(SIGQUIT, SIG_IGN);
+	signal(SIGPIPE, SIG_IGN);
 }
