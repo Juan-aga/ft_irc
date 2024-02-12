@@ -27,8 +27,6 @@
 #include <sys/socket.h>
 #include "Messages.hpp"
 #include <cctype>
-// only in linux, to use setw and setfill
-// we can change it with (numero < 10 ? "00" : (numero < 100 ? "0" : "")) + std::to_string(numero)
 #include <iomanip>
 /********************************/
 /*		Utility functions		*/

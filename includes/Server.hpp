@@ -25,13 +25,10 @@ class Server
 
 		std::string	serverName;
 		std::string	serverHost;
-		//really need the map? can we use vec<CLient*> ???
 		std::map<int, Client * >	clients;
-		//std::map<int, Channel * >	channels;
 		std::vector<Channel *>	channels;
 
 		Server(int port, std::string password);
-		//Server( Server const & server );
 		~Server();
 
 		int 		const &getPort() const;

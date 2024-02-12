@@ -3,11 +3,6 @@
 #include "Client.hpp"
 #include "Utils.hpp"
 
-// for check fstat
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
 class Server;
 
 enum	Type
@@ -84,6 +79,5 @@ class Response
 		void Send();
 		void Send(std::string message, std::string color);
 		void Broadcast(std::vector<Client *> clients, bool self);
-		//bradcast to all the channels were the cient is on. First check that channels size is greather than 0;
 		void Broadcast(std::map< Channel *, std::string >	channels, bool self);
 };
