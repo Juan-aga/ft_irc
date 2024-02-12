@@ -20,7 +20,10 @@ Channel::Channel( std::string const & name, Client * client, Server const & serv
 {
     std::string msg;
 
-	this->topic = "";
+	if (name == "General")
+		this->topic = "This is the general channel.";
+	else
+		this->topic = "";
 	this->password = "";
 	this->clientLimit = 0;
 	this->isFull = false;

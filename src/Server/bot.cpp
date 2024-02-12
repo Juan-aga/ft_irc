@@ -4,31 +4,32 @@ static std::string	botRandom()
 {
 	srand(time(NULL)); // initializes the random number generator with a seed value based on the current time
 	int index = rand() % 10 + 1; // number between 1 and 10
-	
-	std::string str;
+
 	switch (index)
 	{
-		case 1: str = "Wearing headphones for just an hour could increase the bacteria in your ear by 700 times."; break;
-		case 2: str = "Google images was literally created after Jennifer Lopez wore that infamous dress at the 2000 Grammys"; break;
-		case 3: str = "Los Angeles' full name is 'El Pueblo de Nuestra Senora la Reina de los Angeles de Porciuncula'"; break;
-		case 4: str = "Tigers have striped skin, not just striped fur."; break;
-		case 5: str = "Like fingerprints, everyone's tongue print is different."; break;
-		case 6: str = "Cat urine glows under a black-light."; break;
-		case 7: str = "A shrimp's heart is in its head."; break;
-		case 8: str = "The Spice Girls were originally a band called Touch."; break;
-		case 9: str = "The unicorn is the national animal of Scotland"; break;
-		case 10: str = "In 2014, there was a Tinder match in Antarctica"; break;
+		case 1: return("Wearing headphones for just an hour could increase the bacteria in your ear by 700 times.");
+		case 2: return("Google images was literally created after Jennifer Lopez wore that infamous dress at the 2000 Grammys");
+		case 3: return("Los Angeles' full name is 'El Pueblo de Nuestra Senora la Reina de los Angeles de Porciuncula'");
+		case 4: return("Tigers have striped skin, not just striped fur.");
+		case 5: return("Like fingerprints, everyone's tongue print is different.");
+		case 6: return("Cat urine glows under a black-light.");
+		case 7: return("A shrimp's heart is in its head.");
+		case 8: return("The Spice Girls were originally a band called Touch.");
+		case 9: return("The unicorn is the national animal of Scotland");
+		case 10: return("In 2014, there was a Tinder match in Antarctica");
 	}
-	return (str);
+	return ("");
 }
 
 std::string	Server::bot(std::string bot_cmd)
 {
 	// List of valid commands
-	std::string	validCmds[3] = {
+	std::string	validCmds[5] = {
 		":HELP",
 		":HOUR",
 		":RANDOM",
+		":COMMANDS",
+		":GAME",
 		};
 
 	// Convert the command to uppercase
@@ -37,7 +38,7 @@ std::string	Server::bot(std::string bot_cmd)
 	
 	// Check if the command is valid
 	int index = 0;
-	while (index < 3)
+	while (index < 5)
 	{
 		if (bot_cmd == validCmds[index])
 			break;
@@ -46,9 +47,11 @@ std::string	Server::bot(std::string bot_cmd)
 	// Return the response
 	switch (index + 1)
 	{
-		case 1: return("Ask me ':HOUR' or ':RANDOM'");
+		case 1: return("Bot commands-> :HOUR, :RANDOM, :COMMANDS, :GAME.");
 		case 2: return(getTime());
 		case 3: return(botRandom());
+		case 4: return("Commands available in the server: cap, pass, nick, user, quit, join, privmsg, KILLSERVER, topic, part, kick, mode, invite, who, whois.");
+		case 5: return("You lost the game!");
 		default: return("Invalid request, ask ':HELP' for more infos");
 	}
 }
