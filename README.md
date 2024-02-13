@@ -9,7 +9,7 @@ This project is about creating our own IRC server. We used an actual IRC client 
 
 #### Class diagram
 
-![](ft_irc-Page-2.jpg)
+![](ft_irc_diagram.jpg)
 
 ### IRC commands implemented
 
