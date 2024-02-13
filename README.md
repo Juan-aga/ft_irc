@@ -7,8 +7,9 @@ This project is about creating our own IRC server. We used an actual IRC client 
 * [Manual of IRC protocol](https://www.rfc-es.org/rfc/rfc1459-es.txt)
 * [Moderm IRC protocol](https://modern.ircdocs.horse/)
 
-#### Class diagram
+#### Aplication diagram
 
+This is a simple representation of how our IRC server works
 ![](ft_irc_diagram.jpg)
 
 ### IRC commands implemented
