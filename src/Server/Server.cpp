@@ -145,9 +145,9 @@ void Server::newClient(std::vector<struct pollfd>& pollfds)
 void Server::delClient(Client * client, std::vector<struct pollfd>& pollfds)
 {
 	int	fd;
-	std::cout << "Delete client " << client->nick + " in fd: " << client->fd << std::endl;
+	if (DEBUG)
+		std::cout << "Delete client " << client->nick + " in fd: " << client->fd << std::endl;
 
-	//close(client->fd);
 	fd = client->fd;
 	delete client;
 	clients.erase(fd);
