@@ -20,7 +20,7 @@ Channel::Channel( std::string const & name, Client * client, Server const & serv
 {
     std::string msg;
 
-	if (name == "General")
+	if (name == "#General")
 		this->topic = "This is the general channel.";
 	else
 		this->topic = "";
