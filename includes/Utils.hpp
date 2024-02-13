@@ -28,6 +28,7 @@
 #include "Messages.hpp"
 #include <cctype>
 #include <iomanip>
+#include <sys/stat.h>
 /********************************/
 /*		Utility functions		*/
 /********************************/
