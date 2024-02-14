@@ -1,0 +1,5 @@
+.vscode
+ircserv
+/obj
+*.log
+*.dSYM
