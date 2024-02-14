@@ -4,14 +4,14 @@ int Server::numClients = 0;
 int Server::numChannels = 0;
 bool Server::_running = true;
 
-Server::Server(int port, std::string password): _password(password), _port(port),serverName("server"), serverHost("test.irc")
+Server::Server(int port, std::string password): _password(password), _port(port),serverName("discord"), serverHost("farzo")
 {
 	std::stringstream ss;
 	Client * bot = new Client;
 
-	bot->nick = "bot";
-	bot->user = "bot";
-	bot->realName = "bot";
+	bot->nick = "super-octo-spork";
+	bot->user = "super-octo-spork";
+	bot->realName = "super-octo-spork";
 	bot->status = CONNECTED;
 	bot->fd = 0;
 	ss << "[+]" << *this;
@@ -145,9 +145,9 @@ void Server::newClient(std::vector<struct pollfd>& pollfds)
 void Server::delClient(Client * client, std::vector<struct pollfd>& pollfds)
 {
 	int	fd;
-	std::cout << "Delete client " << client->nick + " in fd: " << client->fd << std::endl;
+	if (DEBUG)
+		std::cout << "Delete client " << client->nick + " in fd: " << client->fd << std::endl;
 
-	//close(client->fd);
 	fd = client->fd;
 	delete client;
 	clients.erase(fd);

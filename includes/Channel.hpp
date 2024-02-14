@@ -1,11 +1,7 @@
 #pragma once
 
 #include "Utils.hpp"
-// //#inclide "Utils.hpp"
-// #inclide "Clients.hpp"
 #include "Client.hpp"
-
-//#include <map>
 
 class Server;
 class Client;
@@ -22,17 +18,14 @@ class Channel
 		std::string	topic;
 		std::string password;
 		std::vector< Client *>	clients;
+		std::vector< Client *>	inviteList;
 		int	clientLimit;
-		//std::map< Client * , std::string >	clients;
-		//the chanel must have more options...
-
 		bool isFull;
 		bool inviteOnly;
 		bool opTopic;
 		bool needPass;
 		bool isLimited;
 
-		std::vector< Client *>	inviteList;
 		Channel( void );
 		Channel( std::string const & name, Client * client, Server const & server );
 		~Channel( void );

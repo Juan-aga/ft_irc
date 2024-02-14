@@ -8,25 +8,22 @@ class Channel;
 
 class Client
 {
-private:
+	private:
 
+	public:
+		std::string recvBuff;
+		int         fd;
+		std::string nick;
+		std::string user;
+		std::string realName;
+		std::string ip;
+		std::map< Channel *, std::string >	channels;
+		CLIENT_STATUS   status;
 
-public:
-	std::string recvBuff;
-	int         fd;
-	std::string nick;
-	std::string user;
-	std::string realName;
-	std::string ip;
+		Client(void);
+		Client( Client const & cli );
+		~Client(void);
 
-	//maybe we change the string for the enum of modes
-	std::map< Channel *, std::string >	channels;
-	CLIENT_STATUS   status;
-
-	Client(void);
-	Client( Client const & cli );
-	~Client(void);
-
-	void setRecvBuff(std::string &buffer);
-	std::string &getRecvBuff(void);
+		void setRecvBuff(std::string &buffer);
+		std::string &getRecvBuff(void);
 };
