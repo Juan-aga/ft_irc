@@ -144,11 +144,16 @@ void Server::newClient(std::vector<struct pollfd>& pollfds)
 
 void Server::delClient(Client * client, std::vector<struct pollfd>& pollfds)
 {
+	std::map< Channel *, std::string >::iterator	channel;
 	int	fd;
+
 	if (DEBUG)
 		std::cout << "Delete client " << client->nick + " in fd: " << client->fd << std::endl;
 
 	fd = client->fd;
+	for (channel = client->channels.begin(); channel != client->channels.end(); channel++)
+		channel->first->delClient(client, *this);
+	client->channels.clear();
 	delete client;
 	clients.erase(fd);
 	for (size_t i = 0; i < pollfds.size(); i++)
